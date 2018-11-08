@@ -52,3 +52,10 @@ valueCard (Card rank suit) = valueRank rank
 gameOver :: Hand -> Bool
 gameOver hand | value hand > 21 = True
               | otherwise = False
+
+--A4
+winner :: Hand -> Hand -> Player
+winner guest bank | value guest > 21 = Bank 
+                  | value bank > 21 = Guest
+                  | value guest > value bank = Guest
+                  | value guest == value bank = Bank
