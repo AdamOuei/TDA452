@@ -18,7 +18,9 @@ So basically it calulcates (Add (Card (Numeric 2) Hearts) Which is 1 card, then 
 
 -- A1
 
-hand2 = Add (Card Ace Hearts)(Add (Card Ace Spades) Empty)
+hand2 = Add (Card Ace Hearts)(Add (Card Ace Spades) (Add (Card (Numeric 8) Hearts ) Empty))
+hand1 = Add (Card Jack Hearts)(Add (Card Queen Spades) (Add (Card (Numeric 7) Hearts ) Empty))
+
 empty :: Hand
 empty  = Empty
 
@@ -59,3 +61,9 @@ winner guest bank | value guest > 21 = Bank
                   | value bank > 21 = Guest
                   | value guest > value bank = Guest
                   | value guest == value bank = Bank
+
+-- B1
+(<+) :: Hand -> Hand -> Hand
+(<+) (Add c1 h1) (Add c2 h2) | h1 == Empty = Add c1 (Add c2 h2)
+                             | otherwise = Add c1 ((<+) h1 (Add c2 h2))
+ 
