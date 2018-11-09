@@ -1,6 +1,7 @@
 module BlackJack where
 import Cards
 import RunGame
+import Test.QuickCheck
 
 {- A0
 The size is calculated by the function size where it calculates
@@ -19,7 +20,7 @@ So basically it calulcates (Add (Card (Numeric 2) Hearts) Which is 1 card, then 
 -- A1
 
 hand2 = Add (Card Ace Hearts)(Add (Card Ace Spades) (Add (Card (Numeric 8) Hearts ) Empty))
-hand1 = Add (Card Jack Hearts)(Add (Card Queen Spades) (Add (Card (Numeric 7) Hearts ) Empty))
+hand1 = Add(Card Ace Clubs)(Add (Card Jack Hearts)(Add (Card Queen Spades) (Add (Card (Numeric 7) Hearts ) Empty)))
 
 empty :: Hand
 empty  = Empty
@@ -64,6 +65,15 @@ winner guest bank | value guest > 21 = Bank
 
 -- B1
 (<+) :: Hand -> Hand -> Hand
-(<+) (Add c1 h1) (Add c2 h2) | h1 == Empty = Add c1 (Add c2 h2)
-                             | otherwise = Add c1 ((<+) h1 (Add c2 h2))
- 
+(<+) Empty Empty = Empty
+(<+) Empty hand2 = hand2
+(<+) (Add c1 Empty) hand2 = Add c1 hand2
+(<+) (Add c1 hand) hand2 = Add c1 ((<+) hand hand2)
+
+prop_onTopOf_assoc :: Hand -> Hand -> Hand -> Bool
+prop_onTopOf_assoc p1 p2 p3 =
+    p1<+(p2<+p3) == (p1<+p2)<+p3 
+
+
+prop_size_onTopOf :: Hand -> Hand -> Bool
+prop_size_onTopOf p1 p2 = size p1 + size p2 == size ((<+) p1 p2) 
