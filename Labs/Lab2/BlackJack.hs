@@ -97,3 +97,17 @@ createSuit suit = foldl
                     [(Add (Card {rank = n, suit = suit}) Empty)| n<- map Numeric [2..10] 
                     ++[Jack,Queen,King,Ace]]
 
+--B3
+draw :: Hand -> Hand -> (Hand,Hand)
+draw deck hand | deck == empty = error "draw: The deck is empty"
+draw (Add c1 h1) hand | hand == empty = (h1, Add c1 empty)
+draw (Add c1 h1) (Add c2 h2) = (h1 , Add c1 (Add c2 h2))
+
+--B4
+playBank :: Hand -> Hand
+playBank deck = playBank' deck empty
+
+
+playBank' :: Hand -> Hand -> Hand
+playBank' deck bankHand = bankHand'
+            where (deck',bankHand') = draw deck bankHand
