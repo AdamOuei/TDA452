@@ -77,3 +77,11 @@ prop_onTopOf_assoc p1 p2 p3 =
 
 prop_size_onTopOf :: Hand -> Hand -> Bool
 prop_size_onTopOf p1 p2 = size p1 + size p2 == size ((<+) p1 p2) 
+
+--B2
+fulldeck :: Hand
+fulldeck = foldl 
+                (<+)
+                Empty 
+                ([(Add (Card {rank = Numeric n, suit = Hearts}) Empty)| n<-[2..10]] 
+                ++[(Add (Card {rank = n,suit = Hearts}) Empty) | n<-[Jack,Queen,King,Ace]])
