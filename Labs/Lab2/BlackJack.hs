@@ -94,6 +94,6 @@ createSuit :: Suit -> Hand
 createSuit suit = foldl 
                     (<+)
                     Empty 
-                    ([(Add (Card {rank = Numeric n, suit = suit}) Empty)| n<-[2..10]] 
-                    ++[(Add (Card {rank = n,suit= suit }) Empty) | n<-[Jack,Queen,King,Ace]])
+                    [(Add (Card {rank = n, suit = suit}) Empty)| n<- map Numeric [2..10] 
+                    ++[Jack,Queen,King,Ace]]
 
