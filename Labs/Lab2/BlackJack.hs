@@ -80,8 +80,20 @@ prop_size_onTopOf p1 p2 = size p1 + size p2 == size ((<+) p1 p2)
 
 --B2
 fulldeck :: Hand
-fulldeck = foldl 
-                (<+)
-                Empty 
-                ([(Add (Card {rank = Numeric n, suit = Hearts}) Empty)| n<-[2..10]] 
-                ++[(Add (Card {rank = n,suit = Hearts}) Empty) | n<-[Jack,Queen,King,Ace]])
+fulldeck = ((<+) ((<+) ((<+) (chooseSuit Diamonds) (chooseSuit Clubs)) (chooseSuit Hearts)) (chooseSuit Spades))
+
+chooseSuit :: Suit -> Hand
+chooseSuit suit =
+                case suit of
+                Spades   -> createSuit Spades
+                Hearts   -> createSuit Hearts
+                Diamonds -> createSuit Diamonds
+                Clubs    -> createSuit Clubs
+
+createSuit :: Suit -> Hand 
+createSuit suit = foldl 
+                    (<+)
+                    Empty 
+                    ([(Add (Card {rank = Numeric n, suit = suit}) Empty)| n<-[2..10]] 
+                    ++[(Add (Card {rank = n,suit= suit }) Empty) | n<-[Jack,Queen,King,Ace]])
+
