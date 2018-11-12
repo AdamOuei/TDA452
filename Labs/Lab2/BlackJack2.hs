@@ -111,9 +111,7 @@ playBank deck = playBank' deck empty
 
 playBank' :: Hand -> Hand -> Hand
 playBank' deck bankHand | value bankHand' >= 16 = bankHand'
+                        | otherwise = playBank' deck' bankHand'
             where (deck',bankHand') = draw deck bankHand
-playBank' deck bankHand = playBank' deck' bankHand'
-            where (deck',bankHand') = draw deck bankHand
-
 
 --B5          
