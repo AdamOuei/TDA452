@@ -1,7 +1,8 @@
 module BlackJack where
 import Cards
 import RunGame
-import Test.QuickCheck
+import Test.QuickCheck hiding (shuffle)
+import System.Random
 
 {- A0
 The size is calculated by the function size where it calculates
@@ -114,4 +115,17 @@ playBank' deck bankHand | value bankHand' >= 16 = bankHand'
                         | otherwise = playBank' deck' bankHand'
             where (deck',bankHand') = draw deck bankHand
 
---B5          
+--B5
+
+shuffle :: StdGen -> Hand -> Hand
+shuffle g deck | deck == empty = empty
+               | otherwise = (<+) card (shuffle g cdeck)
+               where(cdeck, card) = pickNthCard deck n
+                    (n,g) = randomR (0, size cdeck) g
+ 
+
+pickNthCard:: Hand -> Integer -> (Hand,Hand)
+pickNthCard deck n | n == 1 = ( currentDeck , currentCard)
+             | otherwise = ((<+) currentCard returnDeck, returnCard)
+             where (currentDeck, currentCard) = draw deck empty
+                   (returnDeck, returnCard) = pickNthCard currentDeck (n-1)
