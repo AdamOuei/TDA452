@@ -18,52 +18,63 @@ So basically it calulcates (Add (Card (Numeric 2) Hearts) Which is 1 card, then 
 
 -}
 
--- A1
-
-hand2 = Add (Card Ace Hearts)(Add (Card Ace Spades) (Add (Card (Numeric 8) Hearts ) Empty))
-hand1 = Add(Card Ace Clubs)(Add (Card Jack Hearts)(Add (Card Queen Spades) (Add (Card (Numeric 7) Hearts ) Empty)))
-deck = fulldeck
-
+    -- A1
+    
+-- | Returns an empty hand
 empty :: Hand
 empty  = Empty
+    
+    --A2
 
---A2
+-- | Calculates the value of the given hand
 value :: Hand -> Integer
 value hand | hand == Empty = 0
            | valueWithValueOfAce 11 hand > 21  = valueWithValueOfAce 1 hand 
            | otherwise = initialValue hand
-
+    
+-- | Calculates the number of aces in a given hand
 numberOfAces :: Hand -> Integer
 numberOfAces Empty = 0
 numberOfAces (Add (Card Ace _) hand ) = 1 + numberOfAces hand
 numberOfAces (Add _ hand) = numberOfAces hand
-
+    
+-- | Calculates the value of the hand with the default value of the Ace card (11)
 initialValue :: Hand -> Integer
 initialValue Empty = 0
 initialValue (Add card hand) = valueCard card + initialValue hand
 
+-- | Computes the value of the hand given the hand and number of aces
 valueWithValueOfAce :: Integer -> Hand -> Integer
 valueWithValueOfAce n hand | n == 11 = initialValue hand                     
                            | n == 1 = initialValue hand - (10 * numberOfAces hand)
+-- | Helper function to determine the value of the rank (2-11) depending on the card                           
 valueRank :: Rank -> Integer
 valueRank Ace = 11
 valueRank (Numeric n) = n
 valueRank face = 10
 
+-- | Uses the helper function to return the value of a card 
 valueCard :: Card -> Integer
 valueCard (Card rank suit) = valueRank rank
 
 --A3
+-- | Checks if the value of the hand is above 21 then it is game over (True)
 gameOver :: Hand -> Bool
 gameOver hand | value hand > 21 = True
               | otherwise = False
 
 --A4
+
+-- | Determines who wins between the bank and the player
 winner :: Hand -> Hand -> Player
-winner guest bank | value guest > 21 = Bank 
-                  | value bank > 21 = Guest
-                  | value guest > value bank = Guest
-                  | value guest == value bank = Bank
+winner guest bank | gameOver guest 
+                  || (value guest == value bank) 
+                  || (value bank > value guest && not(gameOver bank)) = Bank
+                  | value guest > value bank
+                  || gameOver bank 
+                  || value guest == 21 = Guest
+                      
+    
 
 -- B1
 (<+) :: Hand -> Hand -> Hand
@@ -81,8 +92,8 @@ prop_size_onTopOf :: Hand -> Hand -> Bool
 prop_size_onTopOf p1 p2 = size p1 + size p2 == size ( p1 <+ p2) 
 
 --B2
-fulldeck :: Hand
-fulldeck = ((chooseSuit Diamonds <+ chooseSuit Clubs) <+ chooseSuit Hearts) <+ chooseSuit Spades
+fullDeck :: Hand
+fullDeck = ((chooseSuit Diamonds <+ chooseSuit Clubs) <+ chooseSuit Hearts) <+ chooseSuit Spades
 
 chooseSuit :: Suit -> Hand
 chooseSuit suit =
@@ -142,4 +153,17 @@ c `belongsTo` (Add c' h) = c == c' || c `belongsTo` h
 prop_size_shuffle :: StdGen -> Hand -> Bool
 prop_size_shuffle g h = size (shuffle g h) == size h
 
+implementation = Interface
+  { iEmpty    = empty
+  , iFullDeck = fullDeck
+  , iValue    = value
+  , iGameOver = gameOver
+  , iWinner   = winner 
+  , iDraw     = draw
+  , iPlayBank = playBank
+  , iShuffle  = shuffle
+  }
+
+main :: IO ()
+main = runGame implementation
 
