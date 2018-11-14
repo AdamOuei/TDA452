@@ -67,14 +67,13 @@ gameOver hand | value hand > 21 = True
 
 -- | Determines who wins between the bank and the player
 winner :: Hand -> Hand -> Player
-winner guest bank | gameOver guest 
-                  || (value guest == value bank) 
-                  || (value bank > value guest && not(gameOver bank)) = Bank
-                  | value guest > value bank
-                  || gameOver bank 
-                  || value guest == 21 = Guest
-                      
-    
+winner guest bank | gameOver guest = Bank
+                  | (value guest == 21) = Guest
+                  | (value guest == value bank) = Bank
+                  | value guest > value bank = Guest
+                  | gameOver bank = Guest
+                  | value bank > value guest = Bank
+                
 
 -- B1
 (<+) :: Hand -> Hand -> Hand
@@ -113,12 +112,12 @@ createSuit suit = foldl
 --B3
 draw :: Hand -> Hand -> (Hand,Hand)
 draw deck hand | deck == empty = error "draw: The deck is empty"
-draw (Add c1 h1) hand | hand == empty = (h1, Add c1 empty)
+draw (Add c1 h1) hand | hand == Empty = (h1, Add c1 Empty)
 draw (Add c1 h1) (Add c2 h2) = (h1 , Add c1 (Add c2 h2))
 
 --B4
 playBank :: Hand -> Hand
-playBank deck = playBank' deck empty
+playBank deck = playBank' deck Empty
 
 
 playBank' :: Hand -> Hand -> Hand
@@ -138,7 +137,7 @@ shuffle g deck  | deck == empty = empty
 pickNthCard:: Hand -> Integer -> (Hand,Hand)
 pickNthCard deck n | n == 1 = ( currentDeck , currentCard)
                    | otherwise = ( currentCard <+ returnDeck, returnCard)
-                    where (currentDeck, currentCard) = draw deck empty
+                    where (currentDeck, currentCard) = draw deck Empty
                           (returnDeck, returnCard) = pickNthCard currentDeck (n-1)
 
 prop_shuffle_sameCards :: StdGen -> Card -> Hand -> Bool
