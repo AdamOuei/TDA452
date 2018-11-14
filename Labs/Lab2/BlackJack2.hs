@@ -70,7 +70,7 @@ winner guest bank | value guest > 21 = Bank
 (<+) Empty Empty = Empty
 (<+) Empty hand2 = hand2
 (<+) (Add c1 Empty) hand2 = Add c1 hand2
-(<+) (Add c1 hand) hand2 = Add c1 ((<+) hand hand2)
+(<+) (Add c1 hand) hand2 = Add c1 ( hand <+ hand2)
 
 prop_onTopOf_assoc :: Hand -> Hand -> Hand -> Bool
 prop_onTopOf_assoc p1 p2 p3 =
@@ -78,11 +78,11 @@ prop_onTopOf_assoc p1 p2 p3 =
 
 
 prop_size_onTopOf :: Hand -> Hand -> Bool
-prop_size_onTopOf p1 p2 = size p1 + size p2 == size ((<+) p1 p2) 
+prop_size_onTopOf p1 p2 = size p1 + size p2 == size ( p1 <+ p2) 
 
 --B2
 fulldeck :: Hand
-fulldeck = ((<+) ((<+) ((<+) (chooseSuit Diamonds) (chooseSuit Clubs)) (chooseSuit Hearts)) (chooseSuit Spades))
+fulldeck = ((chooseSuit Diamonds <+ chooseSuit Clubs) <+ chooseSuit Hearts) <+ chooseSuit Spades
 
 chooseSuit :: Suit -> Hand
 chooseSuit suit =
@@ -118,14 +118,28 @@ playBank' deck bankHand | value bankHand' >= 16 = bankHand'
 --B5
 
 shuffle :: StdGen -> Hand -> Hand
-shuffle g deck | deck == empty = empty
-               | otherwise = (<+) card (shuffle g cdeck)
-               where(cdeck, card) = pickNthCard deck n
-                    (n,g) = randomR (0, size cdeck) g
+shuffle g deck  | deck == empty = empty
+                | otherwise = card <+ (shuffle g' cdeck)
+                 where(cdeck, card) = pickNthCard deck n
+                      (n,g') = randomR (1, size deck) g
  
 
 pickNthCard:: Hand -> Integer -> (Hand,Hand)
 pickNthCard deck n | n == 1 = ( currentDeck , currentCard)
-             | otherwise = ((<+) currentCard returnDeck, returnCard)
-             where (currentDeck, currentCard) = draw deck empty
-                   (returnDeck, returnCard) = pickNthCard currentDeck (n-1)
+                   | otherwise = ( currentCard <+ returnDeck, returnCard)
+                    where (currentDeck, currentCard) = draw deck empty
+                          (returnDeck, returnCard) = pickNthCard currentDeck (n-1)
+
+prop_shuffle_sameCards :: StdGen -> Card -> Hand -> Bool
+prop_shuffle_sameCards g c h =
+    c `belongsTo` h == c `belongsTo` shuffle g h
+
+
+belongsTo :: Card -> Hand -> Bool
+c `belongsTo` Empty = False
+c `belongsTo` (Add c' h) = c == c' || c `belongsTo` h
+
+prop_size_shuffle :: StdGen -> Hand -> Bool
+prop_size_shuffle g h = size (shuffle g h) == size h
+
+
