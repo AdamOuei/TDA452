@@ -33,7 +33,10 @@ allBlankSudoku = Sudoku (replicate 9 (replicate 9 Nothing))
     {-Sudoku [z | z <- [n], w<- [1..9]]
                 where n = [x | x <- [Nothing],y<-[1..9]]-}
 
-
+allFilledSudoku :: Sudoku
+allFilledSudoku = Sudoku (replicate 9 (replicate 9 (Just 1)))
+    {-Sudoku [z | z <- [n], w<- [1..9]]
+                where n = [x | x <- [Nothing],y<-[1..9]]-}
 
 
 -- * A2
@@ -41,12 +44,12 @@ allBlankSudoku = Sudoku (replicate 9 (replicate 9 Nothing))
 -- | isSudoku sud checks if sud is really a valid representation of a sudoku
 -- puzzle
 isSudoku :: Sudoku -> Bool
-isSudoku (Sudoku rows) = length rows == 9 && checkListLength rows
+isSudoku (Sudoku rows) = length rows == 9 && checkSudoku rows
 
 -- Checks that each row is of size 9 and calls helpermethod to check that each element is empty or 1-9 
 checkSudoku :: [[Maybe Int]] -> Bool
 checkSudoku [] = True
-checkSuduko (row:rows) = length row == 9 && checkSudoku rows && checkList row
+checkSudoku (row:rows) = length row == 9 && checkSudoku rows && checkList row
 
 -- Checks that each element is either empty or between 1-9
 checkList :: [Maybe Int] -> Bool
@@ -63,7 +66,19 @@ checkDigit number = number < Just 10 && number > Just 0
 -- | isFilled sud checks if sud is completely filled in,
 -- i.e. there are no blanks
 isFilled :: Sudoku -> Bool
-isFilled = undefined
+isFilled (Sudoku rows) = isSudoku (Sudoku rows) && checkFilledList rows
+
+checkFilledList :: [[Maybe Int]] -> Bool
+checkFilledList [] = True
+checkFilledList (row:rows) = checkFilledRow row && checkFilledList rows
+
+checkFilledRow :: [Maybe Int] -> Bool
+checkFilledRow [] = True
+checkFilledRow (element:row) = checkFilledDigit element && checkFilledRow row
+
+checkFilledDigit :: Maybe Int -> Bool
+checkFilledDigit Nothing = False
+checkFilledDigit number = number < Just 10 && number > Just 0
 
 -------------------------------------------------------------------------
 
