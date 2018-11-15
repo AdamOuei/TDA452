@@ -41,7 +41,22 @@ allBlankSudoku = Sudoku (replicate 9 (replicate 9 Nothing))
 -- | isSudoku sud checks if sud is really a valid representation of a sudoku
 -- puzzle
 isSudoku :: Sudoku -> Bool
-isSudoku = undefined
+isSudoku (Sudoku rows) = length rows == 9 && checkListLength rows
+
+-- Checks that each row is of size 9 and calls helpermethod to check that each element is empty or 1-9 
+checkSudoku :: [[Maybe Int]] -> Bool
+checkSudoku [] = True
+checkSuduko (row:rows) = length row == 9 && checkSudoku rows && checkList row
+
+-- Checks that each element is either empty or between 1-9
+checkList :: [Maybe Int] -> Bool
+checkList [] = True
+checkList (element:row) = checkDigit element && checkList row
+
+-- Helper method to check digit
+checkDigit :: Maybe Int -> Bool
+checkDigit Nothing = True
+checkDigit number = number < Just 10 && number > Just 0
 
 -- * A3
 
