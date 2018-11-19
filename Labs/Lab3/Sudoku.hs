@@ -53,13 +53,12 @@ checkSudoku (row:rows) = length row == 9 && checkSudoku rows && checkList row
 
 -- Checks that each element is either empty or between 1-9
 checkList :: [Maybe Int] -> Bool
-checkList [] = True
-checkList (element:row) = checkDigit element && checkList row
+checkList row = and (map isDigitOrNothing row)
 
 -- Helper method to check digit
-checkDigit :: Maybe Int -> Bool
-checkDigit Nothing = True
-checkDigit number = number < Just 10 && number > Just 0
+isDigitOrNothing :: Maybe Int -> Bool
+isDigitOrNothing Nothing = True
+isDigitOrNothing number = number < Just 10 && number > Just 0
 
 -- * A3
 
@@ -73,12 +72,12 @@ checkFilledList [] = True
 checkFilledList (row:rows) = checkFilledRow row && checkFilledList rows
 
 checkFilledRow :: [Maybe Int] -> Bool
-checkFilledRow [] = True
-checkFilledRow (element:row) = checkFilledDigit element && checkFilledRow row
+checkFilledRow row = and (map isDigit row)
 
-checkFilledDigit :: Maybe Int -> Bool
-checkFilledDigit Nothing = False
-checkFilledDigit number = number < Just 10 && number > Just 0
+
+isDigit :: Maybe Int -> Bool
+isDigit Nothing = False
+isDigit number = number < Just 10 && number > Just 0
 
 -------------------------------------------------------------------------
 
