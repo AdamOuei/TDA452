@@ -1,6 +1,6 @@
 
 import Test.QuickCheck
-
+import Data.Char hiding (isDigit)
 -------------------------------------------------------------------------
 
 -- | Representation of sudoku puzzlese (allows some junk)
@@ -53,7 +53,7 @@ checkSudoku (row:rows) f = length row == 9 && checkRow row f && checkSudoku rows
 
 -- Checks that each element is either empty or between 1-9
 checkRow :: [Maybe Int] -> (Maybe Int -> Bool) -> Bool
-checkRow row f = and (map f row)
+checkRow row f = and(map f row)
 
 -- Helper method to check digit
 isDigitOrNothing :: Maybe Int -> Bool
@@ -77,13 +77,22 @@ isDigit number = number < Just 10 && number > Just 0
 
 -- |b printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
---printSudoku :: Sudoku -> IO ()
---printSudoku (Sudoku rows) = mapM_ print2 rows
+printSudoku :: Sudoku -> IO ()
+printSudoku (Sudoku rows) = printSudokuRows rows 
 
+printSudokuRows :: [[Maybe Int]] -> IO ()
+printSudokuRows [] = return ()
+printSudokuRows (row:rows) =
+    do putStr (unwords (printSudokuElement row) ++ "\n")
+       printSudokuRows rows
 
+printSudokuElement :: [Maybe Int] -> [String]
+printSudokuElement = map getElement 
 
---print2 :: [Maybe Int] -> [Char]
---print2 row = map (\element -> '.') row
+getElement :: Maybe Int -> String
+getElement digit = case digit of
+    Nothing -> "."
+    Just n -> show n
 
 -- * B2
 
