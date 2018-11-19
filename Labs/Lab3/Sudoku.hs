@@ -49,11 +49,11 @@ isSudoku (Sudoku rows) = length rows == 9 && checkSudoku rows
 -- Checks that each row is of size 9 and calls helpermethod to check that each element is empty or 1-9 
 checkSudoku :: [[Maybe Int]] -> Bool
 checkSudoku [] = True
-checkSudoku (row:rows) = length row == 9 && checkSudoku rows && checkList row
+checkSudoku (row:rows) = length row == 9 && checkRow row isDigitOrNothing && checkSudoku rows 
 
 -- Checks that each element is either empty or between 1-9
-checkList :: [Maybe Int] -> Bool
-checkList row = and (map isDigitOrNothing row)
+checkRow :: [Maybe Int] -> (Maybe Int -> Bool) -> Bool
+checkRow row f = and (map f row)
 
 -- Helper method to check digit
 isDigitOrNothing :: Maybe Int -> Bool
@@ -69,11 +69,7 @@ isFilled (Sudoku rows) = isSudoku (Sudoku rows) && checkFilledList rows
 
 checkFilledList :: [[Maybe Int]] -> Bool
 checkFilledList [] = True
-checkFilledList (row:rows) = checkFilledRow row && checkFilledList rows
-
-checkFilledRow :: [Maybe Int] -> Bool
-checkFilledRow row = and (map isDigit row)
-
+checkFilledList (row:rows) = checkRow row isDigit && checkFilledList rows
 
 isDigit :: Maybe Int -> Bool
 isDigit Nothing = False
@@ -85,8 +81,13 @@ isDigit number = number < Just 10 && number > Just 0
 
 -- |b printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
-printSudoku :: Sudoku -> IO ()
-printSudoku = undefined
+--printSudoku :: Sudoku -> IO ()
+--printSudoku (Sudoku rows) = mapM_ print2 rows
+
+
+
+--print2 :: [Maybe Int] -> [Char]
+--print2 row = map (\element -> '.') row
 
 -- * B2
 
