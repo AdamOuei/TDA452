@@ -98,22 +98,15 @@ makePrintElement element = case element of
 
 -- | readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
---readSudoku :: FilePath -> IO Sudoku
 readSudoku :: FilePath -> IO Sudoku
 readSudoku source =  do c <- readFile source 
                         return (convertListToSudoku $ map lines (lines c))
-                        
-                        
-
---removePunc xs = [ x | x <- xs, not (x `elem` ",.?!-:;\"\'") ]
-
 
 convertListToSudoku :: [[String]] -> Sudoku
 convertListToSudoku list = Sudoku (map convertRowToSudoku list)
 
 convertRowToSudoku :: [String] -> [Maybe Int]
 convertRowToSudoku = map makeSudokuElement . map (:[]) . unwords
-
 
 makeSudokuElement :: String -> Maybe Int
 makeSudokuElement element = case element of
