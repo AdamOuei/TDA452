@@ -87,10 +87,10 @@ printSudokuRows (row:rows) =
        printSudokuRows rows
 
 printSudokuElement :: [Maybe Int] -> [String]
-printSudokuElement = map getElement 
+printSudokuElement = map makePrintElement 
 
-getElement :: Maybe Int -> String
-getElement digit = case digit of
+makePrintElement :: Maybe Int -> String
+makePrintElement element = case element of
     Nothing -> "."
     Just n -> show n
 
@@ -98,8 +98,27 @@ getElement digit = case digit of
 
 -- | readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
+--readSudoku :: FilePath -> IO Sudoku
 readSudoku :: FilePath -> IO Sudoku
-readSudoku = undefined
+readSudoku source =  do c <- readFile source 
+                        return (convertListToSudoku $ map lines (lines c))
+                        
+                        
+
+--removePunc xs = [ x | x <- xs, not (x `elem` ",.?!-:;\"\'") ]
+
+
+convertListToSudoku :: [[String]] -> Sudoku
+convertListToSudoku list = Sudoku (map convertRowToSudoku list)
+
+convertRowToSudoku :: [String] -> [Maybe Int]
+convertRowToSudoku = map makeSudokuElement . map (:[]) . unwords
+
+
+makeSudokuElement :: String -> Maybe Int
+makeSudokuElement element = case element of
+    "." -> Nothing
+    n -> Just $ read n :: Maybe Int
 
 -------------------------------------------------------------------------
 
