@@ -68,32 +68,38 @@ gameOver hand | value hand > 21 = True
 -- | Determines who wins between the bank and the player
 winner :: Hand -> Hand -> Player
 winner guest bank | gameOver guest = Bank
-                  | (value guest == 21) = Guest
-                  | (value guest == value bank) = Bank
+                  | value guest == 21 = Guest
+                  | value guest == value bank = Bank
                   | value guest > value bank = Guest
                   | gameOver bank = Guest
                   | value bank > value guest = Bank
+                                  
                 
 
 -- B1
+-- | Given two hands, <+ puts the first one on top of the second one
 (<+) :: Hand -> Hand -> Hand
 (<+) Empty Empty = Empty
 (<+) Empty hand2 = hand2
 (<+) (Add c1 Empty) hand2 = Add c1 hand2
 (<+) (Add c1 hand) hand2 = Add c1 ( hand <+ hand2)
 
+-- | Shows that putting p1 over p2,p3 is the same as putting p1,p2 over p3
 prop_onTopOf_assoc :: Hand -> Hand -> Hand -> Bool
 prop_onTopOf_assoc p1 p2 p3 =
     p1<+(p2<+p3) == (p1<+p2)<+p3 
 
-
+-- | Property that proves if size of two hands on top of eachother
+-- is the same as the sum of both hands
 prop_size_onTopOf :: Hand -> Hand -> Bool
 prop_size_onTopOf p1 p2 = size p1 + size p2 == size ( p1 <+ p2) 
 
 --B2
+-- | creates a full deck with 13 cards of each suit
 fullDeck :: Hand
 fullDeck = ((chooseSuit Diamonds <+ chooseSuit Clubs) <+ chooseSuit Hearts) <+ chooseSuit Spades
 
+-- | Helper function that helps with constructing a full suit of cards
 chooseSuit :: Suit -> Hand
 chooseSuit suit =
                 case suit of
@@ -101,7 +107,7 @@ chooseSuit suit =
                 Hearts   -> createSuit Hearts
                 Diamonds -> createSuit Diamonds
                 Clubs    -> createSuit Clubs
-
+-- | Creates a specific suit of cards
 createSuit :: Suit -> Hand 
 createSuit suit = foldl 
                     (<+)
@@ -110,47 +116,55 @@ createSuit suit = foldl
                     ++[Jack,Queen,King,Ace]]
 
 --B3
+-- | Draws a card from a deck and returns a tuple of the remaining deck the 
+-- and the new hand
+
 draw :: Hand -> Hand -> (Hand,Hand)
 draw deck hand | deck == empty = error "draw: The deck is empty"
 draw (Add c1 h1) hand | hand == Empty = (h1, Add c1 Empty)
 draw (Add c1 h1) (Add c2 h2) = (h1 , Add c1 (Add c2 h2))
 
 --B4
+-- | The function that uses helper functions to play for the bank until
+-- it stops
 playBank :: Hand -> Hand
 playBank deck = playBank' deck Empty
 
-
+-- | Draws cards until the value of the bank hand is over or equal 16
 playBank' :: Hand -> Hand -> Hand
 playBank' deck bankHand | value bankHand' >= 16 = bankHand'
                         | otherwise = playBank' deck' bankHand'
             where (deck',bankHand') = draw deck bankHand
 
 --B5
-
+-- | Shuffles the deck
 shuffle :: StdGen -> Hand -> Hand
 shuffle g deck  | deck == empty = empty
                 | otherwise = card <+ shuffle g' cdeck
                  where(cdeck, card) = pickNthCard deck n
                       (n,g') = randomR (1, size deck) g
  
-
+-- | Picks a card at position n and returns the nth card and the
+-- remaining deck as a tuple.
 pickNthCard:: Hand -> Integer -> (Hand,Hand)
 pickNthCard deck n | n == 1 = ( currentDeck , currentCard)
                    | otherwise = ( currentCard <+ returnDeck, returnCard)
                     where (currentDeck, currentCard) = draw deck Empty
                           (returnDeck, returnCard) = pickNthCard currentDeck (n-1)
-
+-- | Tests that the shuffled deck is the same as the original deck
 prop_shuffle_sameCards :: StdGen -> Card -> Hand -> Bool
 prop_shuffle_sameCards g c h =
     c `belongsTo` h == c `belongsTo` shuffle g h
 
-
+-- | Test that the card is in the hand
 belongsTo :: Card -> Hand -> Bool
 c `belongsTo` Empty = False
 c `belongsTo` (Add c' h) = c == c' || c `belongsTo` h
 
+-- | Test that the shuffled deck size is the same as the original deck size
 prop_size_shuffle :: StdGen -> Hand -> Bool
 prop_size_shuffle g h = size (shuffle g h) == size h
+
 
 implementation = Interface
   { iEmpty    = empty
@@ -163,6 +177,7 @@ implementation = Interface
   , iShuffle  = shuffle
   }
 
+-- | Starts the game by typing main
 main :: IO ()
 main = runGame implementation
 
