@@ -1,11 +1,14 @@
 
 import Test.QuickCheck
 import Data.Char hiding (isDigit)
+import Data.List
 -------------------------------------------------------------------------
 
 -- | Representation of sudoku puzzlese (allows some junk)
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
  deriving ( Show, Eq )
+
+type Block = [Maybe Int]
 
 -- | A sample sudoku puzzle
 example :: Sudoku
@@ -139,3 +142,13 @@ prop_Sudoku :: Sudoku -> Bool
 prop_Sudoku = isSudoku
 
 -------------------------------------------------------------------------
+-- * D1
+
+isOkayBlock :: Block -> Bool
+isOkayBlock block = length (nubBy (\x y -> Just x == Just y && x/= Nothing && y/= Nothing) block) == 9 
+ 
+-- * D2
+blocks :: Sudoku -> [Block]
+blocks (Sudoku rows) = rows ++ transpose rows
+
+
