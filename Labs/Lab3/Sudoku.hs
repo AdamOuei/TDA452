@@ -75,11 +75,11 @@ isDigit number = number < Just 10 && number > Just 0
 
 -- * B1
 
--- |b printSudoku sud prints a nice representation of the sudoku sud on
--- the screen
+-- Prints a sudoku on the screen
 printSudoku :: Sudoku -> IO ()
 printSudoku (Sudoku rows) = printSudokuRows rows 
 
+-- Goes through the matrix and change the matrix to the format 
 printSudokuRows :: [[Maybe Int]] -> IO ()
 printSudokuRows [] = return ()
 printSudokuRows (row:rows) =
@@ -89,6 +89,7 @@ printSudokuRows (row:rows) =
 printSudokuElement :: [Maybe Int] -> [String]
 printSudokuElement = map makePrintElement 
 
+-- Changes the sign to print
 makePrintElement :: Maybe Int -> String
 makePrintElement element = case element of
     Nothing -> "."
@@ -108,6 +109,7 @@ convertListToSudoku list = Sudoku (map convertRowToSudoku list)
 convertRowToSudoku :: [String] -> [Maybe Int]
 convertRowToSudoku = map makeSudokuElement . map (:[]) . unwords
 
+-- Change the element back to the original element
 makeSudokuElement :: String -> Maybe Int
 makeSudokuElement element = case element of
     "." -> Nothing
@@ -119,8 +121,9 @@ makeSudokuElement element = case element of
 
 -- | cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
-cell = undefined
-
+cell = frequency [(9, return Nothing),
+                  (1, nonEmpty)]
+                  where nonEmpty = elements[Just n | n<- [1..9]]
 
 -- * C2
 
@@ -129,5 +132,10 @@ instance Arbitrary Sudoku where
   arbitrary =
     do rows <- vectorOf 9 (vectorOf 9 cell)
        return (Sudoku rows)
+
+-- * C3
+-- | Checks if all sudokus is sudokus according to A2
+prop_Sudoku :: Sudoku -> Bool
+prop_Sudoku = isSudoku
 
 -------------------------------------------------------------------------
