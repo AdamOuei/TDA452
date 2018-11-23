@@ -2,11 +2,13 @@
 import Test.QuickCheck
 import Data.Char hiding (isDigit)
 import Data.List
+import Data.Maybe
+
 -------------------------------------------------------------------------
 
 -- | Representation of sudoku puzzlese (allows some junk)
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
- deriving ( Show, Eq )
+  deriving ( Show, Eq )
 
 type Block = [Maybe Int]
 
@@ -30,6 +32,11 @@ example =
 
 -- * A1
 
+
+list1 =  [[Just 3,Just 6,Nothing],[Nothing,Just 7,Just 1],[Just 2,Nothing,Nothing]]
+      
+list2= [[Nothing,Just 5,Nothing],[Nothing,Nothing,Nothing],[Just 1,Just 8,Nothing]]
+list3= [[Nothing,Nothing,Just 9],[Just 2,Nothing,Just 4],[Just 7,Nothing,Nothing]]
 -- | allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
 allBlankSudoku = Sudoku (replicate 9 (replicate 9 Nothing))
@@ -110,7 +117,7 @@ convertListToSudoku :: [[String]] -> Sudoku
 convertListToSudoku list = Sudoku (map convertRowToSudoku list)
 
 convertRowToSudoku :: [String] -> [Maybe Int]
-convertRowToSudoku = map makeSudokuElement . map (:[]) . unwords
+convertRowToSudoku = map (makeSudokuElement . (:[])) . unwords
 
 -- Change the element back to the original element
 makeSudokuElement :: String -> Maybe Int
@@ -145,10 +152,36 @@ prop_Sudoku = isSudoku
 -- * D1
 
 isOkayBlock :: Block -> Bool
-isOkayBlock block = length (nubBy (\x y -> Just x == Just y && x/= Nothing && y/= Nothing) block) == 9 
+isOkayBlock block = length block' == 9
+      where block' = nubBy (\x y -> Just x == Just y && isJust x && isJust y ) block
  
 -- * D2
 blocks :: Sudoku -> [Block]
-blocks (Sudoku rows) = rows ++ transpose rows
+blocks sud = rows sud ++ transpose (rows sud) ++ buildNewMatrix (rows sud)
+
+convertRows :: [Maybe Int] -> [[Maybe Int]]
+convertRows [] = []
+convertRows list = take 3 list : convertRows (drop 3 list)
+
+
+buildBlocks :: [[Maybe Int]] -> [[Maybe Int]] -> [[Maybe Int]] -> [[Maybe Int]]
+buildBlocks [] [] []  = []
+buildBlocks list1 list2 list3 = (head list1 ++ head list2 ++ head list3) : buildBlocks 
+                                                                    (drop 1 list1)
+                                                                    (drop 1 list2) 
+                                                                    (drop 1 list3)
+buildNewMatrix :: [[Maybe Int]] -> [[Maybe Int]]
+buildNewMatrix rows | null rows = []
+                    | otherwise = newMatrix ++ buildNewMatrix ( drop 3 rows)
+                   where newMatrix = buildBlocks l1 l2 l3
+                         l1 = convertRows (extract3 !! 0)
+                         l2 = convertRows (extract3 !! 1)
+                         l3 = convertRows (extract3 !! 2)
+                         extract3 = take 3 rows
+
+-- D3
+
+isOkay :: Sudoku -> Bool 
+isOkay sud = all isOkayBlock $ blocks sud
 
 
