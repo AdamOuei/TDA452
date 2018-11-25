@@ -39,12 +39,12 @@ list2= [[Nothing,Just 5,Nothing],[Nothing,Nothing,Nothing],[Just 1,Just 8,Nothin
 list3= [[Nothing,Nothing,Just 9],[Just 2,Nothing,Just 4],[Just 7,Nothing,Nothing]]
 -- | allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
-allBlankSudoku = Sudoku (replicate 9 (replicate 9 Nothing))
+allBlankSudoku = Sudoku $ replicate 9 $ replicate 9 Nothing
     {-Sudoku [z | z <- [n], w<- [1..9]]
                 where n = [x | x <- [Nothing],y<-[1..9]]-}
 
 allFilledSudoku :: Sudoku
-allFilledSudoku = Sudoku (replicate 9 (replicate 9 (Just 1)))
+allFilledSudoku = Sudoku $ replicate 9 $ replicate 9 $ Just 1
     {-Sudoku [z | z <- [n], w<- [1..9]]
                 where n = [x | x <- [Nothing],y<-[1..9]]-}
 
@@ -174,7 +174,7 @@ buildNewMatrix :: [[Maybe Int]] -> [[Maybe Int]]
 buildNewMatrix rows | null rows = []
                     | otherwise = newMatrix ++ buildNewMatrix ( drop 3 rows)
                    where newMatrix = buildBlocks l1 l2 l3
-                         l1 = convertRows (extract3 !! 0)
+                         l1 = convertRows (head extract3)
                          l2 = convertRows (extract3 !! 1)
                          l3 = convertRows (extract3 !! 2)
                          extract3 = take 3 rows
