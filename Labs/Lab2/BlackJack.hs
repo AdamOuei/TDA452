@@ -79,9 +79,7 @@ winner guest bank | gameOver guest = Bank
 -- B1
 -- | Given two hands, <+ puts the first one on top of the second one
 (<+) :: Hand -> Hand -> Hand
-(<+) Empty Empty = Empty
 (<+) Empty hand2 = hand2
-(<+) (Add c1 Empty) hand2 = Add c1 hand2
 (<+) (Add c1 hand) hand2 = Add c1 ( hand <+ hand2)
 
 -- | Shows that putting p1 over p2,p3 is the same as putting p1,p2 over p3
