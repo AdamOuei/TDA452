@@ -4,6 +4,7 @@ import Data.Char hiding (isDigit)
 import Data.List
 import Data.Maybe
 
+
 -------------------------------------------------------------------------
 
 -- | Representation of sudoku puzzlese (allows some junk)
@@ -63,7 +64,7 @@ checkSudoku (row:rows) f = length row == 9 && checkRow row f && checkSudoku rows
 
 -- Checks that each element is either empty or between 1-9
 checkRow :: [Maybe Int] -> (Maybe Int -> Bool) -> Bool
-checkRow row f = and(map f row)
+checkRow row f = all f row
 
 -- Helper method to check digit
 isDigitOrNothing :: Maybe Int -> Bool
@@ -190,4 +191,20 @@ buildNewMatrix rows | null rows = []
 isOkay :: Sudoku -> Bool 
 isOkay sud = all isOkayBlock $ blocks sud
 
+
+-- E1
+type Pos = (Int, Int)
+
+blanks :: Sudoku -> [Pos]
+blanks (Sudoku rows) = [ (r,c) | (r, row) <- zip [0..] rows, (c, Nothing) <- zip [0..] row]
+
+prop_blanks_allBlank :: Sudoku -> Bool
+prop_blanks_allBlank sud = and [ b | (x, y) <- blanks sud, b <- [isNothing (rows sud !! abs x !! abs y)]]
+
+
+  
+    
+
+
+         
 
