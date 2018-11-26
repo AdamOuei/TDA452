@@ -111,7 +111,13 @@ makePrintElement element = case element of
 -- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
 readSudoku source =  do c <- readFile source 
-                        return (convertListToSudoku $ map lines (lines c))
+                        checkFormat $ convertListToSudoku $ map lines $ lines c
+                        
+
+checkFormat :: Sudoku -> IO Sudoku
+checkFormat sud 
+            | isSudoku sud = return sud
+            | otherwise = error "Not a Sudoku"
 
 convertListToSudoku :: [[String]] -> Sudoku
 convertListToSudoku list = Sudoku (map convertRowToSudoku list)
