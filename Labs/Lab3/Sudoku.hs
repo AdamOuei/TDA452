@@ -1,4 +1,4 @@
-
+module Sudoku where
 import Test.QuickCheck
 import Data.Char hiding (isDigit)
 import Data.List
@@ -8,7 +8,7 @@ import Data.Maybe
 -------------------------------------------------------------------------
 
 -- | Representation of sudoku puzzlese (allows some junk)
-data Sudoku = Sudoku { rows :: [[Maybe Int]] }
+newtype Sudoku = Sudoku { rows :: [[Maybe Int]] }
   deriving ( Show, Eq )
 
 type Block = [Maybe Int]
@@ -186,6 +186,11 @@ buildNewMatrix rows | null rows = []
                          l3 = convertRows (extract3 !! 2)
                          extract3 = take 3 rows
 
+prop_blocks_lengths :: Sudoku -> Bool
+prop_blocks_lengths sud = length listOfBlocks == 3*9 && all (\x -> length x == 9) listOfBlocks
+                            where listOfBlocks = blocks sud
+                                  
+
 -- D3
 
 isOkay :: Sudoku -> Bool 
@@ -199,12 +204,39 @@ blanks :: Sudoku -> [Pos]
 blanks (Sudoku rows) = [ (r,c) | (r, row) <- zip [0..] rows, (c, Nothing) <- zip [0..] row]
 
 prop_blanks_allBlank :: Sudoku -> Bool
-prop_blanks_allBlank sud = and [ b | (x, y) <- blanks sud, b <- [isNothing (rows sud !! abs x !! abs y)]]
+prop_blanks_allBlank sud = and [ b | (x, y) <- blanks sud, b <- [isNothing (rows sud !! x !! y)]]
 
 
-  
-    
+-- E2
+
+(!!=)  :: [a] -> (Int,a) ->[a]
+(!!=) list (index, element) = start ++ element:end
+                        where (start,_:end) = splitAt index list
 
 
-         
+-- Denna var inte klar alls TODO HARD                        
+prop_bangBangEquals_correct :: [a] -> (Int,a) -> Bool
+prop_bangBangEquals_correct list (index, element) = 
+                                            length list == length (list !!= (index',element))
+                                            where index' = abs index
+-- TODO HARD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-- E3
 
+update :: Sudoku -> Pos -> Maybe Int -> Sudoku
+update (Sudoku rows) (row,col) element = Sudoku (rows !!= (row,(rows !! row)!!= (col, element)))
+
+--- TODO 
+prop_update_updated :: Sudoku -> Pos -> Maybe Int-> Bool
+prop_update_updated sudoku (x,y) element | element == (rows sudoku !! x' !! y') = True 
+                                         | otherwise  = sudoku /= update sudoku (x',y') element
+                    where x' = mod x 8
+                          y' = mod y 8
+
+
+-- E4
+
+{-candidates :: Sudoku -> Pos -> [Int]
+candidates (Sudoku rows) (x,y) | isBlank = --Kolla element 1-9 vilka som funkar
+                            where isBlank = (x,y) `elem` blanks (Sudoku rows) 
+                                  element = rows !! x !! y  -} 
+                          
