@@ -38,6 +38,7 @@ list1 =  [[Just 3,Just 6,Nothing],[Nothing,Just 7,Just 1],[Just 2,Nothing,Nothin
       
 list2= [[Nothing,Just 5,Nothing],[Nothing,Nothing,Nothing],[Just 1,Just 8,Nothing]]
 list3= [[Nothing,Nothing,Just 9],[Just 2,Nothing,Just 4],[Just 7,Nothing,Nothing]]
+
 -- | allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
 allBlankSudoku = Sudoku $ replicate 9 $ replicate 9 Nothing
@@ -225,7 +226,7 @@ prop_bangBangEquals_correct list (index, element) =
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update (Sudoku rows) (row,col) element = Sudoku (rows !!= (row,(rows !! row)!!= (col, element)))
 
---- TODO 
+
 prop_update_updated :: Sudoku -> Pos -> Maybe Int-> Bool
 prop_update_updated sudoku (x,y) element | element == (rows sudoku !! x' !! y') = True 
                                          | otherwise  = sudoku /= update sudoku (x',y') element
@@ -235,8 +236,15 @@ prop_update_updated sudoku (x,y) element | element == (rows sudoku !! x' !! y') 
 
 -- E4
 
-{-candidates :: Sudoku -> Pos -> [Int]
-candidates (Sudoku rows) (x,y) | isBlank = --Kolla element 1-9 vilka som funkar
-                            where isBlank = (x,y) `elem` blanks (Sudoku rows) 
-                                  element = rows !! x !! y  -} 
-                          
+candidates :: Sudoku -> Pos -> [Int]
+candidates (Sudoku rows) (x,y) = filter (`notElem` rowAndCol) allNum
+                        where row = rows !! x  
+                              col = (transpose rows) !! y
+                              allNum = [1..9]
+                              filteredRow= filter (`notElem` (catMaybes row)) allNum
+                              filteredCol = filter (`notElem` (catMaybes col)) allNum
+                              rowAndCol = filteredRow `union` filteredCol
+
+
+filteredRow' :: [Maybe Int] -> [Int]
+filteredRow' row' = filter (`notElem` (catMaybes row')) [1..9]
