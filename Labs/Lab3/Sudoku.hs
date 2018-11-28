@@ -31,6 +31,17 @@ example =
     n = Nothing
     j = Just
 
+transExample :: Sudoku
+transExample = Sudoku 
+    [[Just 3,Nothing,Nothing,Nothing,Just 4,Just 2,Nothing,Nothing,Nothing],
+    [Just 6,Just 5,Nothing,Nothing,Nothing,Just 7,Nothing,Just 8,Nothing],
+    [Nothing,Nothing,Just 9,Nothing,Nothing,Nothing,Just 5,Just 3,Just 7],
+    [Nothing,Nothing,Just 2,Nothing,Just 5,Just 4,Just 3,Nothing,Just 6],
+    [Just 7,Nothing,Nothing,Just 1,Nothing,Just 6,Nothing,Nothing,Just 9],
+    [Just 1,Nothing,Just 4,Just 3,Just 2,Nothing,Just 8,Nothing,Nothing],
+    [Just 2,Just 1,Just 7,Nothing,Nothing,Nothing,Just 9,Nothing,Nothing],
+    [Nothing,Just 8,Nothing,Just 2,Nothing,Nothing,Nothing,Just 6,Just 4],
+    [Nothing,Nothing,Nothing,Just 8,Just 9,Nothing,Nothing,Nothing,Just 3]]
 -- * A1
 
 
@@ -114,6 +125,7 @@ makePrintElement element = case element of
 readSudoku :: FilePath -> IO Sudoku
 readSudoku source =  do c <- readFile source 
                         checkFormat $ convertListToSudoku $ map lines $ lines c
+                        -- Try dots
                         
 
 checkFormat :: Sudoku -> IO Sudoku
@@ -221,10 +233,11 @@ prop_bangBangEquals_correct list (index, element) =
                                             length list == length (list !!= (index',element))
                                             where index' = abs index
 -- TODO HARD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 -- E3
 
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
-update (Sudoku rows) (row,col) element = Sudoku (rows !!= (row,(rows !! row)!!= (col, element)))
+update (Sudoku rows) (row,col) element = Sudoku (rows !!= (row,(rows !! row) !!= (col, element)))
 
 
 prop_update_updated :: Sudoku -> Pos -> Maybe Int-> Bool
@@ -237,14 +250,23 @@ prop_update_updated sudoku (x,y) element | element == (rows sudoku !! x' !! y') 
 -- E4
 
 candidates :: Sudoku -> Pos -> [Int]
-candidates (Sudoku rows) (x,y) = filter (`notElem` rowAndCol) allNum
+candidates sudoku@(Sudoku rows) (x,y) = filter (`elem` rowAndCol) allNum
                         where row = rows !! x  
-                              col = (transpose rows) !! y
+                              col = transpose rows !! y
+                              block = takeOutBlock (buildNewMatrix rows) (x,y)
                               allNum = [1..9]
-                              filteredRow= filter (`notElem` (catMaybes row)) allNum
-                              filteredCol = filter (`notElem` (catMaybes col)) allNum
-                              rowAndCol = filteredRow `union` filteredCol
+                              filteredRow= filter (`notElem` catMaybes row) allNum
+                              filteredCol = filter (`notElem` catMaybes col) allNum
+                              rowAndCol = filteredRow `intersect` filteredCol `intersect` filteredBlocks
+                              filteredBlocks = filter (`notElem` catMaybes block) allNum
 
 
-filteredRow' :: [Maybe Int] -> [Int]
-filteredRow' row' = filter (`notElem` (catMaybes row')) [1..9]
+takeOutBlock :: [Block] -> Pos -> Block
+takeOutBlock ourBlock (row,col) = rowBlock !! x
+                          where rowBlock = take 3 $ drop y ourBlock
+                                x = col `div` 3
+                                y = (row `div` 3) * 3
+
+--TODO 
+prop_candidates_correct :: [Int] -> Bool
+prop_candidates_correct =undefined 
