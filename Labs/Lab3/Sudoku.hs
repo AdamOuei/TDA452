@@ -228,10 +228,8 @@ prop_blanks_allBlank sud = and [ b | (x, y) <- blanks sud, b <- [isNothing (rows
 
 
 -- Denna var inte klar alls TODO HARD                        
-prop_bangBangEquals_correct :: [a] -> (Int,a) -> Bool
-prop_bangBangEquals_correct list (index, element) = 
-                                            length list == length (list !!= (index',element))
-                                            where index' = abs index
+prop_bangBangEquals_correct :: Eq a => [a] -> (Int,a) -> Bool
+prop_bangBangEquals_correct list (index, element) = ((list !!= (index, element)) !! index) == element
 -- TODO HARD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -- E3
@@ -269,4 +267,16 @@ takeOutBlock ourBlock (row,col) = rowBlock !! x
 
 --TODO 
 prop_candidates_correct :: [Int] -> Bool
-prop_candidates_correct =undefined 
+prop_candidates_correct = undefined 
+
+solve :: Sudoku -> Maybe Sudoku
+solve sud | isOkay sud = solve' sud
+
+
+solve' :: Sudoku -> Maybe Sudoku
+solve' sud | isFilled sud = Just sud
+           | otherwise = case  mapMaybe solve' sudokuList of
+                [] -> Nothing
+                (solvedSud:_) -> Just solvedSud
+    where sudokuList = map (update sud blank . Just) (candidates sud blank)
+          blank = head $ blanks sud
