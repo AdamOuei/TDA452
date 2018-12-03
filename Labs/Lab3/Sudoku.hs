@@ -223,14 +223,16 @@ prop_blanks_allBlank sud = and [ b | (x, y) <- blanks sud, b <- [isNothing (rows
 -- E2
 
 (!!=)  :: [a] -> (Int,a) ->[a]
-(!!=) list (index, element) = start ++ element:end
+list !!= (index, element) = start ++ element:end
                         where (start,_:end) = splitAt index list
 
 
--- Denna var inte klar alls TODO HARD                        
-prop_bangBangEquals_correct :: Eq a => [a] -> (Int,a) -> Bool
-prop_bangBangEquals_correct list (index, element) = ((list !!= (index, element)) !! index) == element
--- TODO HARD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      
+prop_bangBangEquals_correct :: Eq a => [a] -> (Int,a) -> Property
+prop_bangBangEquals_correct list (index, element) = index <= length list-1  && index > 0 ==>
+                                                    newList !! index == element
+                                                    && length list == length newList
+                                        where newList = list !!= (index, element)
 
 -- E3
 
@@ -294,4 +296,8 @@ isSolutionOf solved unsolved = isSolved && (solve solved == solve unsolved)
         where 
             isSolved = isFilled solved && isOkay solved 
 
+prop_SolveSound :: Sudoku -> Property
+prop_SolveSound sud =  isJust (solve sud)  ==> fromJust (solve sud) `isSolutionOf` sud
+
+fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 30 } prop
 
