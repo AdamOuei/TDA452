@@ -270,7 +270,8 @@ prop_candidates_correct :: [Int] -> Bool
 prop_candidates_correct = undefined 
 
 solve :: Sudoku -> Maybe Sudoku
-solve sud | isOkay sud = solve' sud
+solve sud | isSudoku sud && isOkay sud = solve' sud
+          | otherwise = Nothing
 
 
 solve' :: Sudoku -> Maybe Sudoku
