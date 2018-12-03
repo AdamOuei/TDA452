@@ -31,39 +31,13 @@ example =
     n = Nothing
     j = Just
 
-transExample :: Sudoku
-transExample = Sudoku 
-    [[Just 3,Nothing,Nothing,Nothing,Just 4,Just 2,Nothing,Nothing,Nothing],
-    [Just 6,Just 5,Nothing,Nothing,Nothing,Just 7,Nothing,Just 8,Nothing],
-    [Nothing,Nothing,Just 9,Nothing,Nothing,Nothing,Just 5,Just 3,Just 7],
-    [Nothing,Nothing,Just 2,Nothing,Just 5,Just 4,Just 3,Nothing,Just 6],
-    [Just 7,Nothing,Nothing,Just 1,Nothing,Just 6,Nothing,Nothing,Just 9],
-    [Just 1,Nothing,Just 4,Just 3,Just 2,Nothing,Just 8,Nothing,Nothing],
-    [Just 2,Just 1,Just 7,Nothing,Nothing,Nothing,Just 9,Nothing,Nothing],
-    [Nothing,Just 8,Nothing,Just 2,Nothing,Nothing,Nothing,Just 6,Just 4],
-    [Nothing,Nothing,Nothing,Just 8,Just 9,Nothing,Nothing,Nothing,Just 3]]
 -- * A1
-
-
-list1 =  [[Just 3,Just 6,Nothing],[Nothing,Just 7,Just 1],[Just 2,Nothing,Nothing]]
-      
-list2= [[Nothing,Just 5,Nothing],[Nothing,Nothing,Nothing],[Just 1,Just 8,Nothing]]
-list3= [[Nothing,Nothing,Just 9],[Just 2,Nothing,Just 4],[Just 7,Nothing,Nothing]]
-
 -- | allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
 allBlankSudoku = Sudoku $ replicate 9 $ replicate 9 Nothing
-    {-Sudoku [z | z <- [n], w<- [1..9]]
-                where n = [x | x <- [Nothing],y<-[1..9]]-}
-
-allFilledSudoku :: Sudoku
-allFilledSudoku = Sudoku $ replicate 9 $ replicate 9 $ Just 1
-    {-Sudoku [z | z <- [n], w<- [1..9]]
-                where n = [x | x <- [Nothing],y<-[1..9]]-}
 
 
 -- * A2
-
 -- | isSudoku sud checks if sud is really a valid representation of a sudoku
 -- puzzle
 isSudoku :: Sudoku -> Bool
@@ -170,26 +144,29 @@ prop_Sudoku = isSudoku
 
 -------------------------------------------------------------------------
 -- * D1
-
+-- | Checks that the blocks have no duplicate numbers
 isOkayBlock :: Block -> Bool
-isOkayBlock block = length block' == 9
-      where block' = nubBy (\x y -> Just x == Just y && isJust x && isJust y ) block
- 
+isOkayBlock block = length newBlock == length oldBlock
+        where newBlock = nub oldBlock 
+              oldBlock = catMaybes block
 -- * D2
+-- | Splits the sudoku into blocks that consists of 9 elements, either a row, column or a 'square'
 blocks :: Sudoku -> [Block]
 blocks sud = rows sud ++ transpose (rows sud) ++ buildNewMatrix (rows sud)
 
+-- | Converts a list in the sudoku into three lists with three elements each
 convertRows :: [Maybe Int] -> [[Maybe Int]]
 convertRows [] = []
 convertRows list = take 3 list : convertRows (drop 3 list)
 
-
+-- | Given three lists builds them into 3x3 blocks
 buildBlocks :: [[Maybe Int]] -> [[Maybe Int]] -> [[Maybe Int]] -> [[Maybe Int]]
 buildBlocks [] [] []  = []
 buildBlocks list1 list2 list3 = (head list1 ++ head list2 ++ head list3) : buildBlocks 
                                                                     (drop 1 list1)
                                                                     (drop 1 list2) 
                                                                     (drop 1 list3)
+-- | Builds a new matrix consisting of 9 3x3 blocks                                                                    
 buildNewMatrix :: [[Maybe Int]] -> [[Maybe Int]]
 buildNewMatrix rows | null rows = []
                     | otherwise = newMatrix ++ buildNewMatrix ( drop 3 rows)
@@ -198,14 +175,14 @@ buildNewMatrix rows | null rows = []
                          l2 = convertRows (extract3 !! 1)
                          l3 = convertRows (extract3 !! 2)
                          extract3 = take 3 rows
-
+-- | Checks that there are 27 blocks and all blocks have a length of 9
 prop_blocks_lengths :: Sudoku -> Bool
 prop_blocks_lengths sud = length listOfBlocks == 3*9 && all (\x -> length x == 9) listOfBlocks
                             where listOfBlocks = blocks sud
                                   
 
 -- D3
-
+-- | Checks that all blocks are okay
 isOkay :: Sudoku -> Bool 
 isOkay sud = all isOkayBlock $ blocks sud
 
@@ -213,21 +190,24 @@ isOkay sud = all isOkayBlock $ blocks sud
 -- E1
 type Pos = (Int, Int)
 
+-- | Find all the blank positions in the Sudoku, that is where the elements are Nothing
 blanks :: Sudoku -> [Pos]
 blanks (Sudoku rows) = [ (r,c) | (r, row) <- zip [0..] rows, (c, Nothing) <- zip [0..] row]
 
+-- | Checks that for all blanks in a sudoku that they actually were nothing
 prop_blanks_allBlank :: Sudoku -> Bool
 prop_blanks_allBlank sud = and [ b | (x, y) <- blanks sud, b <- [isNothing (rows sud !! x !! y)]]
 
 
 -- E2
-
+-- | Inserts an element into a list given an index.
 (!!=)  :: [a] -> (Int,a) ->[a]
 list !!= (index, element) = start ++ element:end
                         where (start,_:end) = splitAt index list
 
 
-                      
+-- | Checks that the lists have the same length after inserting a new 
+-- element and that the inserted element is in the index it was inserted                    
 prop_bangBangEquals_correct :: Eq a => [a] -> (Int,a) -> Property
 prop_bangBangEquals_correct list (index, element) = index <= length list-1  && index > 0 ==>
                                                     newList !! index == element
@@ -235,11 +215,11 @@ prop_bangBangEquals_correct list (index, element) = index <= length list-1  && i
                                         where newList = list !!= (index, element)
 
 -- E3
-
+-- | Updates a given index in the sudoku with a new element
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update (Sudoku rows) (row,col) element = Sudoku (rows !!= (row,(rows !! row) !!= (col, element)))
 
-
+-- | Checks that the element in the sudoku will be updated with our update function
 prop_update_updated :: Sudoku -> Pos -> Maybe Int-> Bool
 prop_update_updated sudoku (x,y) element | element == (rows sudoku !! x' !! y') = True 
                                          | otherwise  = sudoku /= update sudoku (x',y') element
@@ -248,7 +228,7 @@ prop_update_updated sudoku (x,y) element | element == (rows sudoku !! x' !! y') 
 
 
 -- E4
-
+-- Given a position in a sudoku, gives the candidates of elements for that cell
 candidates :: Sudoku -> Pos -> [Int]
 candidates sudoku@(Sudoku rows) (x,y) = filter (`elem` rowAndCol) allNum
                         where row = rows !! x  
@@ -260,22 +240,26 @@ candidates sudoku@(Sudoku rows) (x,y) = filter (`elem` rowAndCol) allNum
                               rowAndCol = filteredRow `intersect` filteredCol `intersect` filteredBlocks
                               filteredBlocks = filter (`notElem` catMaybes block) allNum
 
-
+-- | Takes out a 3x3 block given the row and column
 takeOutBlock :: [Block] -> Pos -> Block
 takeOutBlock ourBlock (row,col) = rowBlock !! x
                           where rowBlock = take 3 $ drop y ourBlock
                                 x = col `div` 3
                                 y = (row `div` 3) * 3
-
---TODO 
-prop_candidates_correct :: [Int] -> Bool
-prop_candidates_correct = undefined 
-
+-- | Checks that given candidates for a blank position, if sudoku is updated with given candidate it is still okay 
+prop_candidates_correct :: Sudoku -> Property
+prop_candidates_correct sudoku = isSudoku sudoku && isOkay sudoku  ==>
+                                         all isSudoku updatedSudoku && all isOkay updatedSudoku  
+    where candidateList = candidates sudoku blank
+          updatedSudoku = map (update sudoku blank . Just) candidateList
+          blank = head $ blanks sudoku
+--F1          
+-- | Solves a sudoku if it can
 solve :: Sudoku -> Maybe Sudoku
 solve sud | isSudoku sud && isOkay sud = solve' sud
           | otherwise = Nothing
 
---F1
+-- | Helper function to solve a sudoku
 solve' :: Sudoku -> Maybe Sudoku
 solve' sud | isFilled sud = Just sud
            | otherwise = case  mapMaybe solve' sudokuList of
@@ -286,16 +270,17 @@ solve' sud | isFilled sud = Just sud
 
 -- Maybe exchange fromJust!
 -- F2
+-- | Reads a sudoku and tries to solve it
 readAndSolve :: FilePath -> IO ()
 readAndSolve filepath = do
     s <- readSudoku filepath
     if isOkay s then printSudoku $ fromJust $ solve s else error "No solution"
-
+-- | Checks that the solved sudoku is a solution of the unsolved sudoku
 isSolutionOf :: Sudoku -> Sudoku -> Bool
 isSolutionOf solved unsolved = isSolved && (solve solved == solve unsolved)
         where 
             isSolved = isFilled solved && isOkay solved 
-
+-- | Checks that every supposed solution produced by solve actually is a valid solution of the original problem.
 prop_SolveSound :: Sudoku -> Property
 prop_SolveSound sud =  isJust (solve sud)  ==> fromJust (solve sud) `isSolutionOf` sud
 
