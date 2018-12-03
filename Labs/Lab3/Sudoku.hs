@@ -289,3 +289,9 @@ readAndSolve filepath = do
     s <- readSudoku filepath
     if isOkay s then printSudoku $ fromJust $ solve s else error "No solution"
 
+isSolutionOf :: Sudoku -> Sudoku -> Bool
+isSolutionOf solved unsolved = isSolved && (solve solved == solve unsolved)
+        where 
+            isSolved = isFilled solved && isOkay solved 
+
+
