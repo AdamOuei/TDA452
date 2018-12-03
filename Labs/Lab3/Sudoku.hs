@@ -273,7 +273,7 @@ solve :: Sudoku -> Maybe Sudoku
 solve sud | isSudoku sud && isOkay sud = solve' sud
           | otherwise = Nothing
 
-
+--F1
 solve' :: Sudoku -> Maybe Sudoku
 solve' sud | isFilled sud = Just sud
            | otherwise = case  mapMaybe solve' sudokuList of
@@ -281,3 +281,11 @@ solve' sud | isFilled sud = Just sud
                 (solvedSud:_) -> Just solvedSud
     where sudokuList = map (update sud blank . Just) (candidates sud blank)
           blank = head $ blanks sud
+
+-- Maybe exchange fromJust!
+-- F2
+readAndSolve :: FilePath -> IO ()
+readAndSolve filepath = do
+    s <- readSudoku filepath
+    if isOkay s then printSudoku $ fromJust $ solve s else error "No solution"
+
