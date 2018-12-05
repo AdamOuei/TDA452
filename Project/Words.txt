@@ -635,7 +635,6 @@ plan
 plant
 play
 player
-PM
 point
 police
 policy
@@ -918,7 +917,6 @@ true
 truth
 try
 turn
-TV
 two
 type
 under
