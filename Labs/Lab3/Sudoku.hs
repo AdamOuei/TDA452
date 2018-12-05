@@ -208,7 +208,7 @@ list !!= (index, element) = start ++ element:end
 
 -- | Checks that the lists have the same length after inserting a new 
 -- element and that the inserted element is in the index it was inserted                    
-prop_bangBangEquals_correct :: Eq a => [a] -> (Int,a) -> Property
+prop_bangBangEquals_correct :: [Int] -> (Int,Int) -> Property
 prop_bangBangEquals_correct list (index, element) = index <= length list-1  && index > 0 ==>
                                                     newList !! index == element
                                                     && length list == length newList
@@ -284,5 +284,4 @@ isSolutionOf solved unsolved = isSolved && (solve solved == solve unsolved)
 prop_SolveSound :: Sudoku -> Property
 prop_SolveSound sud =  isJust (solve sud)  ==> fromJust (solve sud) `isSolutionOf` sud
 
-fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 30 } prop
 
