@@ -1,5 +1,5 @@
 import System.Random(randomRIO)
-import Data.List(nub)
+import Data.List(nub,sort)
 import Data.List.Split(splitOneOf)
 import Data.Set(insert,fromList,delete,Set,size,elemAt, toList, intersection)
 import Test.QuickCheck
@@ -34,25 +34,37 @@ play word setOfLetters filteredWords =
                             let parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
                                 correctIndexPositions = map (\x -> x-1) parsedPositions
                                 zipPositions = zip correctIndexPositions $ repeat $ head guess
-                                newWord = foldr (\x y -> (!!=) y x) word zipPositions  --word !!= (position-1,head guess)
-
+                                newWord = foldr (\x y -> (!!=) y x) word zipPositions  
                                 newWords = filterSet newWord filteredWords
                                 newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
                             print newWords
-                            play newWord newSetOfLetters newWords
+                            if length newWords == 1 then do 
+                                putStrLn  ("Was the word you were thinking of: " ++ head newWords ++ "?")
+                                answer <- getLine 
+                                if answer == "y" then 
+                                        putStrLn "Thanks for playing"
+                                else do
+                                     -- Look at lazy evaluation lecture
+                                        putStrLn "What was the word you were thinking of?"
+                                --      theWord <- getLine
+                                --      wordList <- getWords
+                                --      let sortedWords = (unlines . sort) (wordList ++ [theWord])
+                                --      writeFile "Words.txt" sortedWords   
+                                else play newWord newSetOfLetters newWords
                 else play word newSet filteredWords
                 
-
+-- | Inserts an element a at a given position int in a list and returns the new list
 (!!=)  :: [a] -> (Int,a) ->[a]
 list !!= (index, element) = start ++ element:end
                         where (start,_:end) = splitAt index list
 
-
+-- | Gets the words from a file with a word list
 getWords :: IO [String]
 getWords = do  text <- readFile "Words.txt"
                let ls = lines text
                return ls
 
+-- | Given a set of letters it returns a random letter from that set
 getRandomLetter :: Set String -> IO String
 getRandomLetter set = do
                      randomIndex <- randomRIO (0,size set-1)
@@ -65,25 +77,28 @@ retrieveLetterSet words = fromList filter'
                 where filter' = filter (`elem` alphabetList ) letters
                       letters = (map (:[]) . unwords) words
 
--- updateLetterSet :: String -> Set String -> Set String
--- updateLetterSet word  set = fromList $ filter (`elem` word) setList
---         where setList = toList set
-
+-- | Filters a set on a word using a help function
 filterSet :: String -> [String]  -> [String]
 filterSet word  = checkWord (createTuples word) 
 
-
+-- | Given a tuple of positions and characters and a wordlist we filter the wordlist on the occurences of the positions and characters
 checkWord :: [(Int, Char)] -> [String] -> [String]
 checkWord tuples@(x:xs) words | null words = []
                               | null xs =  filter (\y -> y !! fst x == snd x) words
                               | otherwise = checkWord xs (filter (\y -> y !! fst x == snd x) words)
                 
                 
-                             
+ -- | Creates a tuple of non-empty characters and the position of those                           
 createTuples  :: String -> [(Int, Char)]
 createTuples word = filter (\x -> snd x /= '_') $ [0..length word-1] `zip` word 
 
+-- TODO 
+winner :: String
+winner = undefined
 
+-- TODO
+gameOver :: String
+gameOver = undefined
 -- | Filters words according to input                     
 filterWords :: (String -> Bool) ->[String] -> [String]
 filterWords  = filter
