@@ -374,6 +374,7 @@ hear
 heart
 heat
 heavy
+hello
 help
 her
 here
