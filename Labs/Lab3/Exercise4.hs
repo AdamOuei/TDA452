@@ -32,3 +32,13 @@ repeat' :: IO Bool -> IO () -> IO ()
 repeat' test op = do op
                      b <- test
                      if b then return () else repeat' test op
+
+prop_LookNothing:: Maybe a -> Bool
+prop_LookNothing element = isNothing(lookup element) 
+
+prop_LookJust :: Maybe a -> Bool
+prop_LookJust element = isJust(lookup element) 
+
+prop_Look:: Maybe a -> Maybe a
+prop_Look element | propLookNothing element = Nothing
+                  | otherwise = Just (lookup element)

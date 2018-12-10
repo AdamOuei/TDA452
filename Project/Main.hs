@@ -1,5 +1,6 @@
 import System.Random(randomRIO)
 import Data.List(nub)
+import Data.List.Split(splitOneOf)
 import Data.Set(insert,fromList,delete,Set,size,elemAt, toList, intersection)
 import Test.QuickCheck
 import Data.Maybe
@@ -28,8 +29,13 @@ play word setOfLetters filteredWords =
                 s<-getLine 
                 if s == "y" 
                     then do print "At what position? (Specify if there are more than one"
-                            position <- readLn
-                            let newWord = word !!= (position-1,head guess)
+                            input <- getLine
+
+                            let parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
+                                correctIndexPositions = map (\x -> x-1) parsedPositions
+                                zipPositions = zip correctIndexPositions $ repeat $ head guess
+                                newWord = foldr (\x y -> (!!=) y x) word zipPositions  --word !!= (position-1,head guess)
+
                                 newWords = filterSet newWord filteredWords
                                 newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
                             print newWords
@@ -89,6 +95,8 @@ prop_filterWords wordLength = all checkLength . filterWords checkLength
           checkLength x = length x == wordLength
 -- TODO
 --AritificalIntelligence :: AI -> AI
+
+
 
 
 
