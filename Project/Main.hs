@@ -1,10 +1,10 @@
 import System.Random(randomRIO)
 import Data.List(nub)
-import Data.Set(insert,fromList,delete,Set,size,elemAt)
+import Data.Set(insert,fromList,delete,Set,size,elemAt, toList, intersection)
 import Test.QuickCheck
 import Data.Maybe
 
-alphabetString  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
+alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
 
 main = do putStrLn "Welcome to the game!"
           putStrLn "Think of a word and write the amount of characters in the word:" 
@@ -24,15 +24,14 @@ play word setOfLetters filteredWords =
                 let guess = elemAt randomIndex setOfLetters
                 putStrLn ("Does your word contain the letter: " ++ guess ++ "? [y/n]")
                 let newSet = delete guess setOfLetters
+                print newSet
                 s<-getLine 
                 if s == "y" 
                     then do print "At what position? (Specify if there are more than one"
                             position <- readLn
                             let newWord = word !!= (position-1,head guess)
                                 newWords = filterSet newWord filteredWords
-                                newSetOfLetters = (delete guess . retrieveLetterSet) newWords
-                        
-                            print newSetOfLetters    
+                                newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
                             print newWords
                             play newWord newSetOfLetters newWords
                 else play word newSet filteredWords
@@ -57,9 +56,12 @@ getRandomLetter set = do
 -- | Gives a set of letters that are in present in all the filtered words
 retrieveLetterSet :: [String] -> Set String
 retrieveLetterSet words = fromList filter'
-                where filter' = filter (`elem` alphabetString ) letters
+                where filter' = filter (`elem` alphabetList ) letters
                       letters = (map (:[]) . unwords) words
 
+-- updateLetterSet :: String -> Set String -> Set String
+-- updateLetterSet word  set = fromList $ filter (`elem` word) setList
+--         where setList = toList set
 
 filterSet :: String -> [String]  -> [String]
 filterSet word  = checkWord (createTuples word) 
