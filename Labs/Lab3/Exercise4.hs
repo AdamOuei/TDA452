@@ -1,5 +1,8 @@
 import System.IO(hFlush, stdout)
 import Data.List(sort)
+import Test.QuickCheck 
+import Data.Maybe
+import Data.Char(digitToInt)
 -- 0 
 
 --A
@@ -33,12 +36,34 @@ repeat' test op = do op
                      b <- test
                      if b then return () else repeat' test op
 
-prop_LookNothing:: Maybe a -> Bool
-prop_LookNothing element = isNothing(lookup element) 
+prop_LookNothing:: Int -> [(Int,Char)]-> Property
+prop_LookNothing element table = collect found $ isNothing(lookup element table) == not found
+    where found = element `elem` map fst table
 
-prop_LookJust :: Maybe a -> Bool
-prop_LookJust element = isJust(lookup element) 
+prop_LookJust :: Int -> [(Int,Char)]-> Property
+prop_LookJust element table = case lookup element table of
+    Just e -> label "Just" $ (element, e) `elem` table
+    _ -> label "Nothing" $ True
 
-prop_Look:: Maybe a -> Maybe a
-prop_Look element | propLookNothing element = Nothing
-                  | otherwise = Just (lookup element)
+prop_Look element table = prop_LookNothing element table .&&. prop_LookJust element table
+
+game :: IO ()
+game = do
+    putStrLn "Think of a number between 1 and 100"
+    putStrLn "Is it 50?"
+    play 50
+
+play :: Int -> IO ()
+play lastGuess = do
+    s <- getLine
+    if s == "yes" then putStrLn "Great, I won"
+    else 
+        if s == "higher" then do 
+            let guess = lastGuess + (100-lastGuess) `div` 2
+            putStrLn ("Is it " ++ show guess ++ "?")
+            play guess
+        else do 
+            let guess = (lastGuess) `div` 2
+            putStrLn ("Is it " ++ show guess ++ "?")
+            play guess
+    

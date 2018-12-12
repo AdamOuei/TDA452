@@ -6,6 +6,7 @@ import Test.QuickCheck
 import Data.Maybe
 
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
+frequencyList = map (:[]) "etaoinsrhldc"
 
 main = do putStrLn "Welcome to the game!"
           putStrLn "Think of a word and write the amount of characters in the word:" 
@@ -28,7 +29,7 @@ play word setOfLetters filteredWords =
                 print newSet
                 s<-getLine 
                 if s == "y" 
-                    then do print "At what position? (Specify if there are more than one"
+                    then do print "At what position? (Specify if there are more than one)"
                             input <- getLine
 
                             let parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
@@ -38,7 +39,7 @@ play word setOfLetters filteredWords =
                                 newWords = filterSet newWord filteredWords
                                 newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
                             print newWords
-                            if length newWords == 1 then do 
+                            if length newWords <= 1 then do 
                                 putStrLn  ("Was the word you were thinking of: " ++ head newWords ++ "?")
                                 answer <- getLine 
                                 if answer == "y" then 
@@ -46,10 +47,7 @@ play word setOfLetters filteredWords =
                                 else do
                                      -- Look at lazy evaluation lecture
                                         putStrLn "What was the word you were thinking of?"
-                                --      theWord <- getLine
-                                --      wordList <- getWords
-                                --      let sortedWords = (unlines . sort) (wordList ++ [theWord])
-                                --      writeFile "Words.txt" sortedWords   
+                                        addNewWord
                                 else play newWord newSetOfLetters newWords
                 else play word newSet filteredWords
                 
@@ -63,6 +61,11 @@ getWords :: IO [String]
 getWords = do  text <- readFile "Words.txt"
                let ls = lines text
                return ls
+-- | Not working, solve later
+addNewWord = do theWord <- getLine
+                wordList <- getWords
+                let sortedWords = (unlines . sort) (wordList ++ [theWord])
+                writeFile "Words.txt" sortedWords 
 
 -- | Given a set of letters it returns a random letter from that set
 getRandomLetter :: Set String -> IO String
@@ -76,6 +79,8 @@ retrieveLetterSet :: [String] -> Set String
 retrieveLetterSet words = fromList filter'
                 where filter' = filter (`elem` alphabetList ) letters
                       letters = (map (:[]) . unwords) words
+
+
 
 -- | Filters a set on a word using a help function
 filterSet :: String -> [String]  -> [String]
