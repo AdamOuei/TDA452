@@ -5,6 +5,7 @@ import Data.Set(insert,fromList,delete,Set,size,elemAt, toList, intersection)
 import Test.QuickCheck
 import Data.Maybe
 
+
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
 
 main = do putStrLn "Welcome to the game!"
@@ -44,18 +45,19 @@ play word setOfLetters filteredWords =
                                 if answer == "y" then 
                                         putStrLn "Thanks for playing"
                                 else do
-                                     -- Look at lazy evaluation lecture
+                                        --Look at lazy evaluation lecture
                                         putStrLn "What was the word you were thinking of?"
-                                --      theWord <- getLine
-                                --      wordList <- getWords
-                                --      let sortedWords = (unlines . sort) (wordList ++ [theWord])
-                                --      writeFile "Words.txt" sortedWords   
+                                        theWord <- getLine
+                                        wordList <- getWords
+                                        let sortedWords = (unlines . sort) (wordList ++ [theWord])
+                                        writeFile "Words.txt" sortedWords   
                                 else play newWord newSetOfLetters newWords
                 else play word newSet filteredWords
                 
 -- | Inserts an element a at a given position int in a list and returns the new list
 (!!=)  :: [a] -> (Int,a) ->[a]
-list !!= (index, element) = start ++ element:end
+list !!= (index, element) | index < length list && index >= 0 = start ++ element:end
+                          | otherwise = error "Out of bounds"
                         where (start,_:end) = splitAt index list
 
 -- | Gets the words from a file with a word list
@@ -110,9 +112,3 @@ prop_filterWords wordLength = all checkLength . filterWords checkLength
           checkLength x = length x == wordLength
 -- TODO
 --AritificalIntelligence :: AI -> AI
-
-
-
-
-
-
