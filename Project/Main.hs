@@ -6,15 +6,18 @@ import Test.QuickCheck
 import Data.Maybe
 
 
+
+
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
-frequencyList = map (:[]) "etaoinsrhldc"
+frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
+
 
 main = do putStrLn "Welcome to the game!"
           putStrLn "Think of a word and write the amount of characters in the word:" 
-          wordCount <- readLn 
+          wordCount <- readLn
           allWords <- getWords
           let filteredWords = filterWords (\x -> length x == wordCount) allWords
-          let setOfLetters = retrieveLetterSet filteredWords 
+          let setOfLetters = retrieveLetterSet filteredWords alphabetList
           let word = ['_' | l<-[1..wordCount]]
           play word setOfLetters filteredWords
 
@@ -29,36 +32,30 @@ play word setOfLetters filteredWords =
                 let newSet = delete guess setOfLetters
                 print newSet
                 s<-getLine 
-                if s == "y" 
-                    then do print "At what position? (Specify if there are more than one)"
-                            input <- getLine
-
-                            let parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
-                                correctIndexPositions = map (\x -> x-1) parsedPositions
-                                zipPositions = zip correctIndexPositions $ repeat $ head guess
-                                newWord = foldr (\x y -> (!!=) y x) word zipPositions  
-                                newWords = filterSet newWord filteredWords
-                                newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
-                            print newWords
-                            if length newWords <= 1 then do 
-                                putStrLn  ("Was the word you were thinking of: " ++ head newWords ++ "?")
-                                answer <- getLine 
-                                if answer == "y" then 
-                                        putStrLn "Thanks for playing"
-                                else do
-                                        --Look at lazy evaluation lecture
-                                        putStrLn "What was the word you were thinking of?"
-<<<<<<< HEAD
-                                        theWord <- getLine
-                                        wordList <- getWords
-                                        let sortedWords = (unlines . sort) (wordList ++ [theWord])
-                                        writeFile "Words.txt" sortedWords   
-=======
-                                        addNewWord
->>>>>>> b313983d7d48ee579030767df3fb778eedff2b65
+                case s  of
+                  "y" ->  do    putStrLn "At what position? (Specify if there are more than one)"
+                                input <- getLine
+                                -- let parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
+                                --     correctIndexPositions = map (\x -> x-1) parsedPositions
+                                --     zipPositions = zip correctIndexPositions $ repeat $ head guess
+                                let
+                                    newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
+                                    newWords = filterSet newWord filteredWords
+                                    newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords alphabetList
+                                if length newWords <= 1 then
+                                        if null newWords then
+                                                putStrLn"No such word"
+                                        else gameOver newWords
                                 else play newWord newSetOfLetters newWords
-                else play word newSet filteredWords
+                  "n" -> play word newSet filteredWords
+                  _ -> play word setOfLetters filteredWords
                 
+
+getPositions :: String -> String -> [(Int,Char)]
+getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
+        where parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
+              correctIndexPositions = map (\x -> x-1) parsedPositions                             
+              
 -- | Inserts an element a at a given position int in a list and returns the new list
 (!!=)  :: [a] -> (Int,a) ->[a]
 list !!= (index, element) | index < length list && index >= 0 = start ++ element:end
@@ -67,7 +64,7 @@ list !!= (index, element) | index < length list && index >= 0 = start ++ element
 
 -- | Gets the words from a file with a word list
 getWords :: IO [String]
-getWords = do  text <- readFile "Words.txt"
+getWords = do  text <- readFile "./Words.txt"
                let ls = lines text
                return ls
 -- | Not working, solve later
@@ -82,11 +79,15 @@ getRandomLetter set = do
                      randomIndex <- randomRIO (0,size set-1)
                      return $ elemAt randomIndex set
 
+-- getStatisticalLetter :: String
+-- getStatisticalLetter = frequency ( reverse [1..26] `zip` elements $ frequencyList)
+
+
 
 -- | Gives a set of letters that are in present in all the filtered words
-retrieveLetterSet :: [String] -> Set String
-retrieveLetterSet words = fromList filter'
-                where filter' = filter (`elem` alphabetList ) letters
+retrieveLetterSet :: [String] -> [String] -> Set String
+retrieveLetterSet words charList = fromList filter'
+                where filter' = filter (`elem` charList ) letters
                       letters = (map (:[]) . unwords) words
 
 
@@ -111,8 +112,17 @@ winner :: String
 winner = undefined
 
 -- TODO
-gameOver :: String
-gameOver = undefined
+gameOver :: [String] -> IO ()
+gameOver newWords@(x:xs) =
+                do 
+                putStrLn  ("Was the word you were thinking of: " ++ x ++ "?")
+           
+                answer <- getLine 
+                if answer == "y" then 
+                 putStrLn "Thanks for playing"
+                else putStrLn "What was the word you were thinking of?"
+                --addNewWord
+                
 -- | Filters words according to input                     
 filterWords :: (String -> Bool) ->[String] -> [String]
 filterWords  = filter
