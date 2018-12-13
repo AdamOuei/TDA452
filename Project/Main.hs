@@ -15,15 +15,14 @@ frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
 
 
 main = do putStrLn "Welcome to the game!"
-          
-          do allWords <- getWords
-             characterAmount <- getLineInt
-             let 
-                filteredWords = filterWords (\x -> length x == characterAmount) allWords
-                setOfLetters = retrieveLetterSet filteredWords alphabetList
-                word = ['_' | l<-[1..characterAmount]]
-                in
-                play word setOfLetters filteredWords
+          allWords <- getWords
+          characterAmount <- getLineInt
+          let 
+            filteredWords = filterWords (\x -> length x == characterAmount) allWords
+            setOfLetters = retrieveLetterSet filteredWords alphabetList
+            word = ['_' | l<-[1..characterAmount]]
+            in
+            play word setOfLetters filteredWords
               
             
 
@@ -52,7 +51,7 @@ play word setOfLetters filteredWords =
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
                 
-
+-- | Reads the input from the user, if not an int it prompts for another input
 getLineInt :: IO Int
 getLineInt  =
         do putStrLn "Think of a word and write the amount of characters in the word:" 
@@ -61,22 +60,34 @@ getLineInt  =
                 Just x -> return x
                 Nothing -> putStrLn "Invalid number entered" >> getLineInt 
 
+-- | Returns the positions for the guess as a tuple (position, guess)
 getPositions :: String -> String -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
         where parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
-              correctIndexPositions = map (\x -> x-1) parsedPositions                             
-              
+              correctIndexPositions = map (\x -> x-1) parsedPositions 
+        
+        
 -- | Inserts an element a at a given position int in a list and returns the new list
 (!!=)  :: [a] -> (Int,a) ->[a]
 list !!= (index, element) | index < length list && index >= 0 = start ++ element:end
                           | otherwise = error "Out of bounds"
                         where (start,_:end) = splitAt index list
 
+
+-- | Checks that the lists have the same length after inserting a new 
+-- element and that the inserted element is in the index it was inserted                    
+prop_listInsertion_correct :: [Int] -> (Int,Int) -> Property
+prop_listInsertion_correct list (index, element) = index <= length list-1  && index > 0 ==>
+                                                    newList !! index == element
+                                                    && length list == length newList
+                                        where newList = list !!= (index, element)
+
 -- | Gets the words from a file with a word list
 getWords :: IO [String]
 getWords = do  text <- readFile "./Words.txt"
                let ls = lines text
                return ls
+
 -- | Not working, solve later
 addNewWord = do theWord <- getLine
                 wordList <- getWords
@@ -88,10 +99,6 @@ getRandomLetter :: Set String -> IO String
 getRandomLetter set = do
                      randomIndex <- randomRIO (0,size set-1)
                      return $ elemAt randomIndex set
-
--- getStatisticalLetter :: String
--- getStatisticalLetter = frequency ( reverse [1..26] `zip` elements $ frequencyList)
-
 
 
 -- | Gives a set of letters that are in present in all the filtered words
@@ -117,16 +124,12 @@ checkWord tuples@(x:xs) words | null words = []
 createTuples  :: String -> [(Int, Char)]
 createTuples word = filter (\x -> snd x /= '_') $ [0..length word-1] `zip` word 
 
--- TODO 
-winner :: String
-winner = undefined
-
--- TODO
+-- | Check if the last word in the list is the word the player was thinking about, 
+-- otherwise it asks what you were thinking about
 gameOver :: [String] -> IO ()
 gameOver newWords@(x:xs) =
                 do 
                 putStrLn  ("Was the word you were thinking of: " ++ x ++ "?")
-           
                 answer <- getLine 
                 if answer == "y" then 
                  putStrLn "Thanks for playing"
