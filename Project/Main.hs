@@ -4,6 +4,8 @@ import Data.List.Split(splitOneOf)
 import Data.Set(insert,fromList,delete,Set,size,elemAt, toList, intersection)
 import Test.QuickCheck
 import Data.Maybe
+import Text.Read
+import Data.Char
 
 
 
@@ -13,14 +15,17 @@ frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
 
 
 main = do putStrLn "Welcome to the game!"
-          putStrLn "Think of a word and write the amount of characters in the word:" 
-          wordCount <- readLn
-          allWords <- getWords
-          let filteredWords = filterWords (\x -> length x == wordCount) allWords
-          let setOfLetters = retrieveLetterSet filteredWords alphabetList
-          let word = ['_' | l<-[1..wordCount]]
-          play word setOfLetters filteredWords
-
+          
+          do allWords <- getWords
+             characterAmount <- getLineInt
+             let 
+                filteredWords = filterWords (\x -> length x == characterAmount) allWords
+                setOfLetters = retrieveLetterSet filteredWords alphabetList
+                word = ['_' | l<-[1..characterAmount]]
+                in
+                play word setOfLetters filteredWords
+              
+            
 
 play :: String -> Set String-> [String] -> IO ()
 play word setOfLetters filteredWords =
@@ -35,9 +40,6 @@ play word setOfLetters filteredWords =
                 case s  of
                   "y" ->  do    putStrLn "At what position? (Specify if there are more than one)"
                                 input <- getLine
-                                -- let parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
-                                --     correctIndexPositions = map (\x -> x-1) parsedPositions
-                                --     zipPositions = zip correctIndexPositions $ repeat $ head guess
                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
                                     newWords = filterSet newWord filteredWords
@@ -50,6 +52,14 @@ play word setOfLetters filteredWords =
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
                 
+
+getLineInt :: IO Int
+getLineInt  =
+        do putStrLn "Think of a word and write the amount of characters in the word:" 
+           wordCount <- getLine
+           case readMaybe wordCount of
+                Just x -> return x
+                Nothing -> putStrLn "Invalid number entered" >> getLineInt 
 
 getPositions :: String -> String -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
@@ -121,7 +131,7 @@ gameOver newWords@(x:xs) =
                 if answer == "y" then 
                  putStrLn "Thanks for playing"
                 else putStrLn "What was the word you were thinking of?"
-                --addNewWord
+                
                 
 -- | Filters words according to input                     
 filterWords :: (String -> Bool) ->[String] -> [String]
