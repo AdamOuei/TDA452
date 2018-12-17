@@ -1,5 +1,3 @@
-import System.Random(randomRIO)
-import Data.List(nub,sort)
 import Data.List.Split(splitOneOf)
 import Data.Set(insert,fromList,delete,Set,size,elemAt, toList, intersection)
 import Test.QuickCheck
@@ -27,7 +25,6 @@ play word setOfLetters filteredWords =
                 guess <- getRandomLetter setOfLetters
                 putStrLn ("Does your word contain the letter: " ++ [guess] ++ "? [y/n]")
                 let newSet = delete guess setOfLetters
-                --print newSet
                 s<-getLine 
                 case s  of
                   "y" ->  do    input <- handleInput
@@ -44,6 +41,12 @@ play word setOfLetters filteredWords =
                   _ -> play word setOfLetters filteredWords
 
 -- TODO: Out of bounds
+-- TODO: add word if not existing?????
+-- TODO: check the tests
+-- TODO: maybe make the end of game better
+-- Todo : NO :(
+-- TODO : AI
+
 
 handleInput :: IO [Int]
 handleInput = do 
@@ -105,7 +108,7 @@ getWords = do  text <- readFile "/usr/share/dict/words"
 
 -- | TODO Keep or don't keep               
 prop_getWords ::  IO Bool
-prop_getWords = do file <- readFile "./Words.txt"
+prop_getWords = do file <- readFile "/usr/share/dict/words"
                    let words = lines file
                    otherWord <- getWords
                    return $ otherWord == words
@@ -117,11 +120,11 @@ prop_getWords = do file <- readFile "./Words.txt"
 --                 writeFile "Words.txt" sortedWords 
 
 
--- | Given a set of letters it returns a random letter from that set
-getRandomLetter':: Set Char -> IO Char
-getRandomLetter' set = do
-                     randomIndex <- randomRIO (0,size set-1)
-                     return $ elemAt randomIndex set
+-- -- | Given a set of letters it returns a random letter from that set
+-- getRandomLetter':: Set Char -> IO Char
+-- getRandomLetter' set = do
+--                      randomIndex <- randomRIO (0,size set-1)
+--                      return $ elemAt randomIndex set
 
 -- | Generates a random letter with a higher frequency of a more common letter
 getRandomLetter :: Set Char -> IO Char
