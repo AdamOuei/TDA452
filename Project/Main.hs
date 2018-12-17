@@ -7,9 +7,6 @@ import Data.Maybe
 import Text.Read
 import Data.Char
 
-
-
-
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
 frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
 
@@ -34,9 +31,10 @@ play word setOfLetters filteredWords =
                 let guess = elemAt randomIndex setOfLetters
                 putStrLn ("Does your word contain the letter: " ++ guess ++ "? [y/n]")
                 let newSet = delete guess setOfLetters
-                print newSet
+                --print newSet
                 s<-getLine 
                 case s  of
+                        -- TODO Handle wrong input like we did in getLineInt
                   "y" ->  do    putStrLn "At what position? (Specify if there are more than one)"
                                 input <- getLine
                                 let
