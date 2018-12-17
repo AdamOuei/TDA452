@@ -8,14 +8,14 @@ import Text.Read
 import Data.Char
 
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
-frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
+--frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
 
 
 main = do putStrLn "Welcome to the game!"
           allWords <- getWords
           characterAmount <- getLineInt
           let 
-            filteredWords = filterWords (\x -> length x == characterAmount) allWords
+            filteredWords = filter (\x -> length x == characterAmount) allWords
             setOfLetters = retrieveLetterSet filteredWords alphabetList
             word = ['_' | l<-[1..characterAmount]]
             in
@@ -38,7 +38,7 @@ play word setOfLetters filteredWords =
                                 input <- getLine
                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
-                                    newWords = filterSet newWord filteredWords
+                                    newWords = filterList newWord filteredWords
                                     newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords alphabetList
                                 if length newWords <= 1 then
                                         if null newWords then
@@ -99,6 +99,7 @@ addNewWord = do theWord <- getLine
                 let sortedWords = (unlines . sort) (wordList ++ [theWord])
                 writeFile "Words.txt" sortedWords 
 
+-- TODO: fråga thomas
 -- | Given a set of letters it returns a random letter from that set
 getRandomLetter :: Set String -> IO String
 getRandomLetter set = do
@@ -118,9 +119,10 @@ prop_retrieveLetterSet words charList = all (`elem` charList) resultingSet
         where resultingSet = retrieveLetterSet words charList
 
 
--- | Filters a set on a word using a help function
-filterSet :: String -> [String]  -> [String]
-filterSet word  = checkWord (createTuples word) 
+-- | Filters a set on a word using a help function check word to filter on the filled positions in the guess
+filterList :: String -> [String] -> [String]
+filterList word  = checkWord (createTuples word) 
+
 
 -- | Given a tuple of positions and characters and a wordlist we filter the wordlist on the occurences of the positions and characters
 checkWord :: [(Int, Char)] -> [String] -> [String]
@@ -157,15 +159,11 @@ gameOver newWords@(x:xs) =
                  putStrLn "Thanks for playing"
                 else putStrLn "What was the word you were thinking of?"
                 
-                
--- | Filters words according to input                     
-filterWords :: (String -> Bool) ->[String] -> [String]
-filterWords  = filter
 
 -- | Checks that all the words after the filtering is filtered with the correct length
-prop_filterWords :: Int -> [String] -> Bool
-prop_filterWords wordLength = all checkLength . filterWords checkLength
-        where
-          checkLength x = length x == wordLength
+-- prop_filterList :: Int -> [String] -> Bool
+-- prop_filterList wordLength = all checkLength . filter checkLength
+--         where
+--           checkLength x = length x == wordLength
 -- TODO
 --AritificalIntelligence :: AI -> AI
