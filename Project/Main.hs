@@ -34,9 +34,7 @@ play word setOfLetters filteredWords =
                 s<-getLine 
                 case s  of
                         -- TODO Handle wrong input like we did in getLineInt
-                  "y" ->  do    putStrLn "At what position? (Specify if there are more than one)"
-                                input <- getLine
-                                --input <- handleInput
+                  "y" ->  do    input <- handleInput
                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
                                     newWords = filterList newWord filteredWords
@@ -49,15 +47,20 @@ play word setOfLetters filteredWords =
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
 
--- handleInput :: IO String
--- handleInput = do 
---         putStrLn "At what position? (Specify if there are more than one)"
---         input <- getLine
---         case parseMany input of
---                 True -> return input
---                 False -> putStrLn "Not a valid input" >> handleInput
+handleInput :: IO [Int]
+handleInput = do 
+        putStrLn "At what position? (Specify if there are more than one)"
+        input <- getLine
+        case (mapM readMaybeInt . digitList) input of
+                Just x -> return x
+                Nothing -> putStrLn "Not a valid input" >> handleInput
 
+-- | Checks so that the input does not contain a position larger than the word
+notOutOfBounds :: [Int] -> String -> Bool
+notOutOfBounds guessInput word = all ( < length word) guessInput
 
+digitList :: String -> [String]
+digitList = splitOneOf ",;. "
 
 -- parseMany :: String -> Bool
 -- parseMany input = all (\x -> read x :: Int) digitList
@@ -65,6 +68,8 @@ play word setOfLetters filteredWords =
 --                 where digitList = (splitOneOf ",;. ") input
 
 -- Kom ihåg: Mappa read maybe och sen använd sequence!!! 
+
+
                 
                 
 -- | Reads the input from the user, if not an int it prompts for another input
@@ -76,12 +81,16 @@ getLineInt  =
                 Just x -> return x
                 Nothing -> putStrLn "Invalid number entered" >> getLineInt 
                 
+        
 -- TODO: fråga thomas
 -- | Returns the positions for the guess as a tuple (position, guess)
-getPositions :: String -> String -> [(Int,Char)]
+getPositions :: [Int] -> String -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
-        where parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
-              correctIndexPositions = map (\x -> x-1) parsedPositions 
+        where -- parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
+              correctIndexPositions = map (\x -> x-1) input 
+
+readMaybeInt :: String -> Maybe Int
+readMaybeInt = readMaybe
     
         
 -- | Inserts an element a at a given position int in a list and returns the new list
@@ -89,6 +98,7 @@ getPositions input guess = zip correctIndexPositions $ repeat $ head guess
 list !!= (index, element) | index < length list && index >= 0 = start ++ element:end
                           | otherwise = error "Out of bounds"
                         where (start,_:end) = splitAt index list
+
 
 
 -- | Checks that the lists have the same length after inserting a new 
