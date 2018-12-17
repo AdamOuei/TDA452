@@ -21,7 +21,7 @@ main = do putStrLn "Welcome to the game!"
             in
             play word setOfLetters filteredWords
               
-            
+-- generate from Test.quickcheck : kom ihåg (n,return c) där c kommer från list comprehension och n från frequency             
 
 play :: String -> Set String-> [String] -> IO ()
 play word setOfLetters filteredWords =
@@ -36,6 +36,7 @@ play word setOfLetters filteredWords =
                         -- TODO Handle wrong input like we did in getLineInt
                   "y" ->  do    putStrLn "At what position? (Specify if there are more than one)"
                                 input <- getLine
+                                --input <- handleInput
                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
                                     newWords = filterList newWord filteredWords
@@ -47,6 +48,24 @@ play word setOfLetters filteredWords =
                                 else play newWord newSetOfLetters newWords
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
+
+-- handleInput :: IO String
+-- handleInput = do 
+--         putStrLn "At what position? (Specify if there are more than one)"
+--         input <- getLine
+--         case parseMany input of
+--                 True -> return input
+--                 False -> putStrLn "Not a valid input" >> handleInput
+
+
+
+-- parseMany :: String -> Bool
+-- parseMany input = all (\x -> read x :: Int) digitList
+                
+--                 where digitList = (splitOneOf ",;. ") input
+
+-- Kom ihåg: Mappa read maybe och sen använd sequence!!! 
+                
                 
 -- | Reads the input from the user, if not an int it prompts for another input
 getLineInt :: IO Int
@@ -82,7 +101,7 @@ prop_listInsertion_correct list (index, element) = index <= length list-1  && in
 
 -- | Gets the words from a file with a word list
 getWords :: IO [String]
-getWords = do  text <- readFile "./Words.txt"
+getWords = do  text <- readFile "/usr/share/dict/words"
                let ls = lines text
                return ls
 
@@ -123,6 +142,7 @@ prop_retrieveLetterSet words charList = all (`elem` charList) resultingSet
 filterList :: String -> [String] -> [String]
 filterList word  = checkWord (createTuples word) 
 
+-- Kolla på att refaktorera till två metoder ?! 
 
 -- | Given a tuple of positions and characters and a wordlist we filter the wordlist on the occurences of the positions and characters
 checkWord :: [(Int, Char)] -> [String] -> [String]
