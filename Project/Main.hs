@@ -7,9 +7,7 @@ import Data.Maybe
 import Text.Read
 import Data.Char
 
---  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
 frequencyList = "etaoinsrhldcumfpgwybvkxjqz" -- ['e','t','a' ...]
-
 
 main = do putStrLn "Welcome to the game!"
           allWords <- getWords
@@ -20,8 +18,7 @@ main = do putStrLn "Welcome to the game!"
             word = ['_' | l<-[1..characterAmount]]
             in
             play word setOfLetters filteredWords
-              
--- generate from Test.quickcheck : kom ihåg (n,return c) där c kommer från list comprehension och n från frequency             
+                         
 
 play :: String -> Set Char-> [String] -> IO ()
 play word setOfLetters filteredWords =
@@ -33,7 +30,6 @@ play word setOfLetters filteredWords =
                 --print newSet
                 s<-getLine 
                 case s  of
-                        -- TODO Handle wrong input like we did in getLineInt
                   "y" ->  do    input <- handleInput
                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
@@ -53,20 +49,20 @@ handleInput :: IO [Int]
 handleInput = do 
         putStrLn "At what position? (Specify if there are more than one)"
         input <- getLine
-        case (mapM readMaybeInt . digitList) input of
+        case mapM readMaybeInt $ splitInput input of
                 Just x -> return x
                 Nothing -> putStrLn "Not a valid input" >> handleInput
+        where splitInput = splitOneOf ",;. " 
 
 -- | Checks so that the input does not contain a position larger than the word
 notOutOfBounds :: [Int] -> String -> Bool
 notOutOfBounds guessInput word = all  ( <= wordLength) guessInput
                 where wordLength = length word
 
+-- | Not working for some reason
 prop_inBounds ::[Int] -> String -> Property
 prop_inBounds list word = not(null list) && not(null word) ==> notOutOfBounds list word
-
-digitList :: String -> [String]
-digitList = splitOneOf ",;. "                
+                
                 
 -- | Reads the input from the user, if not an int it prompts for another input
 getLineInt :: IO Int
@@ -80,8 +76,9 @@ getLineInt  =
 -- | Returns the positions for the guess as a tuple (position, guess)
 getPositions :: [Int] -> Char -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat guess 
-        where correctIndexPositions = map (\x -> x-1) input 
+        where correctIndexPositions = map (\x -> x-1) input         
 
+-- | Helper function to help parse input with more than one position
 readMaybeInt :: String -> Maybe Int
 readMaybeInt = readMaybe
     
@@ -91,8 +88,6 @@ readMaybeInt = readMaybe
 list !!= (index, element) | index < length list && index >= 0 = start ++ element:end
                           | otherwise = error "Out of bounds"
                         where (start,_:end) = splitAt index list
-
-
 
 -- | Checks that the lists have the same length after inserting a new 
 -- element and that the inserted element is in the index it was inserted                    
@@ -115,35 +110,33 @@ prop_getWords = do file <- readFile "./Words.txt"
                    otherWord <- getWords
                    return $ otherWord == words
 
--- | Not working, solve later
-addNewWord = do theWord <- getLine
-                wordList <- getWords
-                let sortedWords = (unlines . sort) (wordList ++ [theWord])
-                writeFile "Words.txt" sortedWords 
+-- -- | Not working, solve later
+-- addNewWord = do theWord <- getLine
+--                 wordList <- getWords
+--                 let sortedWords = (unlines . sort) (wordList ++ [theWord])
+--                 writeFile "Words.txt" sortedWords 
 
--- TODO: fråga thomas
+
 -- | Given a set of letters it returns a random letter from that set
-getRandomLetter :: Set Char -> IO Char
-getRandomLetter set = do
+getRandomLetter':: Set Char -> IO Char
+getRandomLetter' set = do
                      randomIndex <- randomRIO (0,size set-1)
                      return $ elemAt randomIndex set
 
 -- | Generates a random letter with a higher frequency of a more common letter
-getRandomLetter' :: IO Char
-getRandomLetter' = generate $ frequency zipped 
-                where zipped = [1..] `zip`  (reverse . map return) frequencyList
+getRandomLetter :: Set Char -> IO Char
+getRandomLetter set = generate $ frequency zipped 
+                where zipped = [1..] `zip`  (reverse . map return) result
+                      result = filter (`elem` setToList) frequencyList
+                      setToList = toList set
                       
 
-
+-- TODO: Fix map toLower to better solution
 -- | Gives a set of letters that are in present in all the filtered words
-retrieveLetterSet' :: [String] -> [String] -> Set String
-retrieveLetterSet' words charList = fromList filter'
-                where filter' = filter (`elem` charList ) letters
-                      letters = (map (:[]) . unwords) words
 
 retrieveLetterSet :: [String] -> Set Char
-retrieveLetterSet = fromList . concat
-                
+retrieveLetterSet =  fromList . map toLower . concat
+
                       
 -- TODO REDO THIS WITH NEW VABALBA
 
