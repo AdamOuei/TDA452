@@ -7,7 +7,7 @@ import Data.Maybe
 import Text.Read
 import Data.Char
 
-alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
+--  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
 frequencyList = "etaoinsrhldcumfpgwybvkxjqz" -- ['e','t','a' ...]
 
 
@@ -16,19 +16,19 @@ main = do putStrLn "Welcome to the game!"
           characterAmount <- getLineInt
           let 
             filteredWords = filter (\x -> length x == characterAmount) allWords
-            setOfLetters = retrieveLetterSet filteredWords alphabetList
+            setOfLetters = retrieveLetterSet filteredWords 
             word = ['_' | l<-[1..characterAmount]]
             in
             play word setOfLetters filteredWords
               
 -- generate from Test.quickcheck : kom ihåg (n,return c) där c kommer från list comprehension och n från frequency             
 
-play :: String -> Set String-> [String] -> IO ()
+play :: String -> Set Char-> [String] -> IO ()
 play word setOfLetters filteredWords =
         do    
                 putStrLn word
                 guess <- getRandomLetter setOfLetters
-                putStrLn ("Does your word contain the letter: " ++ guess ++ "? [y/n]")
+                putStrLn ("Does your word contain the letter: " ++ [guess] ++ "? [y/n]")
                 let newSet = delete guess setOfLetters
                 --print newSet
                 s<-getLine 
@@ -38,7 +38,7 @@ play word setOfLetters filteredWords =
                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
                                     newWords = filterList newWord filteredWords
-                                    newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords alphabetList
+                                    newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
                                 if length newWords <= 1 then
                                         if null newWords then
                                                 putStrLn"No such word"
@@ -78,10 +78,9 @@ getLineInt  =
                 Nothing -> putStrLn "Invalid number entered" >> getLineInt 
                 
 -- | Returns the positions for the guess as a tuple (position, guess)
-getPositions :: [Int] -> String -> [(Int,Char)]
-getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
-        where -- parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
-              correctIndexPositions = map (\x -> x-1) input 
+getPositions :: [Int] -> Char -> [(Int,Char)]
+getPositions input guess = zip correctIndexPositions $ repeat guess 
+        where correctIndexPositions = map (\x -> x-1) input 
 
 readMaybeInt :: String -> Maybe Int
 readMaybeInt = readMaybe
@@ -124,7 +123,7 @@ addNewWord = do theWord <- getLine
 
 -- TODO: fråga thomas
 -- | Given a set of letters it returns a random letter from that set
-getRandomLetter :: Set String -> IO String
+getRandomLetter :: Set Char -> IO Char
 getRandomLetter set = do
                      randomIndex <- randomRIO (0,size set-1)
                      return $ elemAt randomIndex set
@@ -137,21 +136,21 @@ getRandomLetter' = generate $ frequency zipped
 
 
 -- | Gives a set of letters that are in present in all the filtered words
-retrieveLetterSet :: [String] -> [String] -> Set String
-retrieveLetterSet words charList = fromList filter'
+retrieveLetterSet' :: [String] -> [String] -> Set String
+retrieveLetterSet' words charList = fromList filter'
                 where filter' = filter (`elem` charList ) letters
                       letters = (map (:[]) . unwords) words
 
-retrieveLetterSet' :: [String] -> Set Char
-retrieveLetterSet' = fromList . concat
+retrieveLetterSet :: [String] -> Set Char
+retrieveLetterSet = fromList . concat
                 
                       
-
+-- TODO REDO THIS WITH NEW VABALBA
 
 -- | Checks so the resulting letter set all is present in the char list
-prop_retrieveLetterSet :: [String] -> [String] -> Bool
-prop_retrieveLetterSet words charList = all (`elem` charList) resultingSet
-        where resultingSet = retrieveLetterSet words charList
+-- prop_retrieveLetterSet :: [String] -> [String] -> Bool
+-- prop_retrieveLetterSet words charList = all (`elem` charList) resultingSet
+--         where resultingSet = retrieveLetterSet words charList
 
 
 -- | Filters a set on a word using a help function check word to filter on the filled positions in the guess
