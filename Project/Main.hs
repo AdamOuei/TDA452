@@ -60,12 +60,16 @@ getLineInt  =
                 Just x -> return x
                 Nothing -> putStrLn "Invalid number entered" >> getLineInt 
 
+-- Leave this for now
+prop_returnsInt :: IO Int
+prop_returnsInt = undefined
+
 -- | Returns the positions for the guess as a tuple (position, guess)
 getPositions :: String -> String -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
         where parsedPositions = (map (\x -> read x ::Int) . splitOneOf ",;. ") input
               correctIndexPositions = map (\x -> x-1) parsedPositions 
-        
+    
         
 -- | Inserts an element a at a given position int in a list and returns the new list
 (!!=)  :: [a] -> (Int,a) ->[a]
@@ -88,6 +92,13 @@ getWords = do  text <- readFile "./Words.txt"
                let ls = lines text
                return ls
 
+-- | TODO Keep or don't keep               
+prop_getWords ::  IO Bool
+prop_getWords = do file <- readFile "./Words.txt"
+                   let words = lines file
+                   otherWord <- getWords
+                   return $ otherWord == words
+
 -- | Not working, solve later
 addNewWord = do theWord <- getLine
                 wordList <- getWords
@@ -95,10 +106,10 @@ addNewWord = do theWord <- getLine
                 writeFile "Words.txt" sortedWords 
 
 -- | Given a set of letters it returns a random letter from that set
-getRandomLetter :: Set String -> IO String
-getRandomLetter set = do
-                     randomIndex <- randomRIO (0,size set-1)
-                     return $ elemAt randomIndex set
+-- getRandomLetter :: Set String -> IO String
+-- getRandomLetter set = do
+--                      randomIndex <- randomRIO (0,size set-1)
+--                      return $ elemAt randomIndex set
 
 
 -- | Gives a set of letters that are in present in all the filtered words
@@ -107,6 +118,10 @@ retrieveLetterSet words charList = fromList filter'
                 where filter' = filter (`elem` charList ) letters
                       letters = (map (:[]) . unwords) words
 
+-- | Checks so the resulting letter set all is present in the char list
+prop_retrieveLetterSet :: [String] -> [String] -> Bool
+prop_retrieveLetterSet words charList = all (`elem` charList) resultingSet
+        where resultingSet = retrieveLetterSet words charList
 
 
 -- | Filters a set on a word using a help function
@@ -118,11 +133,24 @@ checkWord :: [(Int, Char)] -> [String] -> [String]
 checkWord tuples@(x:xs) words | null words = []
                               | null xs =  filter (\y -> y !! fst x == snd x) words
                               | otherwise = checkWord xs (filter (\y -> y !! fst x == snd x) words)
+
+-- | Checks so all constructed tuples of a word actually contains the character of the word in the 
+--   correct position for all results in the set of words
+prop_checkWord :: String -> [String] -> Property
+prop_checkWord word wordList = not (null word) && not  (null wordList) ==> 
+                               all (\x ->  all (\y -> x !! fst y  == snd y) tuples) result
+        where result = checkWord tuples filteredWords
+              tuples = createTuples word
+              filteredWords = filter (\x -> length word == length x) wordList
                 
                 
  -- | Creates a tuple of non-empty characters and the position of those                           
 createTuples  :: String -> [(Int, Char)]
-createTuples word = filter (\x -> snd x /= '_') $ [0..length word-1] `zip` word 
+createTuples word = filter (\x -> snd x /= '_') $ [0..length word-1] `zip` word
+
+prop_createTuples_correct :: String -> Bool
+prop_createTuples_correct string = length removeBlanks == length (createTuples string)
+                where removeBlanks = filter (`notElem` ['_']) string 
 
 -- | Check if the last word in the list is the word the player was thinking about, 
 -- otherwise it asks what you were thinking about
