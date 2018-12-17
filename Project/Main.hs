@@ -8,7 +8,7 @@ import Text.Read
 import Data.Char
 
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
---frequencyList = map (:[]) "etaoinsrhldcumfpgwybvkxjqz"
+frequencyList = "etaoinsrhldcumfpgwybvkxjqz"
 
 
 main = do putStrLn "Welcome to the game!"
@@ -124,6 +124,12 @@ getRandomLetter :: Set String -> IO String
 getRandomLetter set = do
                      randomIndex <- randomRIO (0,size set-1)
                      return $ elemAt randomIndex set
+
+-- | Generates a random letter with a higher frequency of a more common letter
+getRandomLetter' :: IO Char
+getRandomLetter' = generate $ frequency zipped 
+                where zipped = [1..] `zip`  (reverse . map return) frequencyList
+                      
 
 
 -- | Gives a set of letters that are in present in all the filtered words
