@@ -8,7 +8,7 @@ import Text.Read
 import Data.Char
 
 alphabetList  = map (:[]) "abcdefghijklmnopqrstuvwxyz"
-frequencyList = "etaoinsrhldcumfpgwybvkxjqz"
+frequencyList = "etaoinsrhldcumfpgwybvkxjqz" -- ['e','t','a' ...]
 
 
 main = do putStrLn "Welcome to the game!"
@@ -47,6 +47,8 @@ play word setOfLetters filteredWords =
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
 
+-- TODO: Out of bounds
+
 handleInput :: IO [Int]
 handleInput = do 
         putStrLn "At what position? (Specify if there are more than one)"
@@ -57,20 +59,14 @@ handleInput = do
 
 -- | Checks so that the input does not contain a position larger than the word
 notOutOfBounds :: [Int] -> String -> Bool
-notOutOfBounds guessInput word = all ( < length word) guessInput
+notOutOfBounds guessInput word = all  ( <= wordLength) guessInput
+                where wordLength = length word
+
+prop_inBounds ::[Int] -> String -> Property
+prop_inBounds list word = not(null list) && not(null word) ==> notOutOfBounds list word
 
 digitList :: String -> [String]
-digitList = splitOneOf ",;. "
-
--- parseMany :: String -> Bool
--- parseMany input = all (\x -> read x :: Int) digitList
-                
---                 where digitList = (splitOneOf ",;. ") input
-
--- Kom ihåg: Mappa read maybe och sen använd sequence!!! 
-
-
-                
+digitList = splitOneOf ",;. "                
                 
 -- | Reads the input from the user, if not an int it prompts for another input
 getLineInt :: IO Int
@@ -81,8 +77,6 @@ getLineInt  =
                 Just x -> return x
                 Nothing -> putStrLn "Invalid number entered" >> getLineInt 
                 
-        
--- TODO: fråga thomas
 -- | Returns the positions for the guess as a tuple (position, guess)
 getPositions :: [Int] -> String -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
@@ -147,6 +141,12 @@ retrieveLetterSet :: [String] -> [String] -> Set String
 retrieveLetterSet words charList = fromList filter'
                 where filter' = filter (`elem` charList ) letters
                       letters = (map (:[]) . unwords) words
+
+retrieveLetterSet' :: [String] -> Set Char
+retrieveLetterSet' = fromList . concat
+                
+                      
+
 
 -- | Checks so the resulting letter set all is present in the char list
 prop_retrieveLetterSet :: [String] -> [String] -> Bool
