@@ -27,8 +27,7 @@ play :: String -> Set String-> [String] -> IO ()
 play word setOfLetters filteredWords =
         do    
                 putStrLn word
-                randomIndex <- randomRIO (0,size setOfLetters-1)
-                let guess = elemAt randomIndex setOfLetters
+                guess <- getRandomLetter setOfLetters
                 putStrLn ("Does your word contain the letter: " ++ guess ++ "? [y/n]")
                 let newSet = delete guess setOfLetters
                 --print newSet
@@ -57,11 +56,8 @@ getLineInt  =
            case readMaybe wordCount of
                 Just x -> return x
                 Nothing -> putStrLn "Invalid number entered" >> getLineInt 
-
--- Leave this for now
-prop_returnsInt :: IO Int
-prop_returnsInt = undefined
-
+                
+-- TODO: fråga thomas
 -- | Returns the positions for the guess as a tuple (position, guess)
 getPositions :: String -> String -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat $ head guess 
@@ -104,10 +100,10 @@ addNewWord = do theWord <- getLine
                 writeFile "Words.txt" sortedWords 
 
 -- | Given a set of letters it returns a random letter from that set
--- getRandomLetter :: Set String -> IO String
--- getRandomLetter set = do
---                      randomIndex <- randomRIO (0,size set-1)
---                      return $ elemAt randomIndex set
+getRandomLetter :: Set String -> IO String
+getRandomLetter set = do
+                     randomIndex <- randomRIO (0,size set-1)
+                     return $ elemAt randomIndex set
 
 
 -- | Gives a set of letters that are in present in all the filtered words
