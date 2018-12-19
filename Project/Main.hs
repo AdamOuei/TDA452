@@ -28,19 +28,21 @@ play word setOfLetters filteredWords =
                 s<-getLine 
                 case s  of
                   "y" ->  do    input <- handleInput
-                                let
+                                if notOutOfBounds input word then
+                                 let
                                     newWord = foldr (\x y -> (!!=) y x) word $ getPositions input guess 
                                     newWords = filterList newWord filteredWords
-                                    newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords 
-                                if length newWords <= 1 then
+                                    newSetOfLetters = delete guess $ newSet `intersection` retrieveLetterSet newWords
+                                    in 
+                                    if length newWords <= 1 then
                                         if null newWords then
                                                 putStrLn"No such word"
                                         else gameOver newWords
-                                else play newWord newSetOfLetters newWords
+                                    else play newWord newSetOfLetters newWords
+                                else putStrLn "Not a valid position, try again" >> play word newSet filteredWords       
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
 
--- TODO: Out of bounds
 -- TODO: add word if not existing?????
 -- TODO: check the tests
 -- TODO: maybe make the end of game better
