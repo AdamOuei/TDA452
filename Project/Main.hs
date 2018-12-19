@@ -5,7 +5,7 @@ import Data.Maybe
 import Text.Read
 import Data.Char
 
-frequencyList = "etaoinsrhldcumfpgwybvkxjqz" -- ['e','t','a' ...]
+frequencyList = "etaoinsrhldcumfpgwybvkxjqz"
 
 main = do putStrLn "Welcome to the game!"
           allWords <- getWords
@@ -44,15 +44,12 @@ play word setOfLetters filteredWords =
                   _ -> play word setOfLetters filteredWords
 
 
--- TODO: check the tests
 -- TODO: maybe make the end of game better
--- Todo : NO :(
--- TODO : AI
 
-
+-- | Makes sure that the input is correct otherwise calls the function so the user can try again
 handleInput :: IO [Int]
 handleInput = do 
-        putStrLn "At what position? (Specify if there are more than one)"
+        putStrLn "At what position? (Specify if there is more than one)"
         input <- getLine
         case mapM readMaybeInt $ splitInput input of
                 Just x -> return x
@@ -64,14 +61,14 @@ notOutOfBounds :: [Int] -> String -> Bool
 notOutOfBounds guessInput word = all  ( \x -> x <= wordLength && x /= 0) guessInput
                 where wordLength = length word
 
--- | Not working for some reason
+-- | Tests that the notOutOfBounds function is working as intended
 prop_inBounds ::[Int] -> String -> Property
 prop_inBounds list word = not(null list) && not(null word) ==>  
                 notOutOfBounds list word ==  not (any (\x -> x > length word || x == 0) list)  
 
                 
                 
--- | Reads the input from the user, if not an int it prompts for another input
+-- | Reads the input from the user, if not a number it prompts for another input
 getLineInt :: IO Int
 getLineInt  =
         do putStrLn "Think of a word and write the amount of characters in the word:" 
@@ -83,7 +80,17 @@ getLineInt  =
 -- | Returns the positions for the guess as a tuple (position, guess)
 getPositions :: [Int] -> Char -> [(Int,Char)]
 getPositions input guess = zip correctIndexPositions $ repeat guess 
-        where correctIndexPositions = map (\x -> x-1) input         
+        where correctIndexPositions = map (\x -> x-1) input     
+        
+-- | Test for the function getPosition so that it correctly gives tuples with the correct int and char
+prop_getPositions_correct :: [Int] -> Char -> Bool
+prop_getPositions_correct list char =  isSameLength && isSameList && isCorrectChar
+        where tuples = getPositions list char
+              getInts = map fst tuples
+              convertIndex = map (+1) getInts  
+              isSameList = convertIndex == list                
+              isCorrectChar = all (\(x,y) -> y == char) tuples
+              isSameLength = length list == length convertIndex
 
 -- | Helper function to help parse input with more than one position
 readMaybeInt :: String -> Maybe Int
@@ -110,13 +117,6 @@ getWords = do  text <- readFile "/usr/share/dict/words"
                let ls = lines text
                return ls
 
--- | TODO Keep or don't keep               
-prop_getWords ::  IO Bool
-prop_getWords = do file <- readFile "Words.txt"
-                   let words = lines file
-                   otherWord <- getWords
-                   return $ otherWord == words
-
 -- | Generates a random letter with a higher frequency of a more common letter
 getRandomLetter :: Set Char -> IO Char
 getRandomLetter set = generate $ frequency zipped 
@@ -126,34 +126,34 @@ getRandomLetter set = generate $ frequency zipped
                       
 
 -- | Gives a set of letters that are in present in all the filtered words
-
 retrieveLetterSet :: [String] -> Set Char
 retrieveLetterSet =  fromList . map toLower . concat
 
 
-
 -- | Checks so the resulting letter set all is present in the char list
--- prop_retrieveLetterSet :: [String] -> [String] -> Bool
--- prop_retrieveLetterSet words charList = all (`elem` charList) resultingSet
---         where resultingSet = retrieveLetterSet words charList
+prop_retrieveLetterSet :: [String] -> Bool
+prop_retrieveLetterSet words = all (`elem` listFromSet) concatedWords
+        where resultingSet = retrieveLetterSet words
+              listFromSet = toList resultingSet
+              concatedWords = (map toLower .concat) words
 
 
 -- | Filters a set on a word using a help function check word to filter on the filled positions in the guess
 filterList :: String -> [String] -> [String]
-filterList word  = checkWord (createTuples word) 
+filterList word  = filterWordsWithTuples (createTuples word) 
 
 -- | Given a tuple of positions and characters and a wordlist we filter the wordlist on the occurences of the positions and characters
-checkWord :: [(Int, Char)] -> [String] -> [String]
-checkWord tuples@(x:xs) words | null words = []
+filterWordsWithTuples :: [(Int, Char)] -> [String] -> [String]
+filterWordsWithTuples tuples@(x:xs) words | null words = []
                               | null xs =  filter (\y -> y !! fst x == snd x) words
-                              | otherwise = checkWord xs (filter (\y -> y !! fst x == snd x) words)
+                              | otherwise = filterWordsWithTuples xs (filter (\y -> y !! fst x == snd x) words)
 
 -- | Checks so all constructed tuples of a word actually contains the character of the word in the 
 --   correct position for all results in the set of words
-prop_checkWord :: String -> [String] -> Property
-prop_checkWord word wordList = not (null word) && not  (null wordList) ==> 
+prop_filterWordsWithTuples:: String -> [String] -> Property
+prop_filterWordsWithTuples word wordList = not (null word) && not (null wordList) ==> 
                                all (\x ->  all (\y -> x !! fst y  == snd y) tuples) result
-        where result = checkWord tuples filteredWords
+        where result = filterWordsWithTuples tuples filteredWords
               tuples = createTuples word
               filteredWords = filter (\x -> length word == length x) wordList
                 
@@ -162,6 +162,7 @@ prop_checkWord word wordList = not (null word) && not  (null wordList) ==>
 createTuples  :: String -> [(Int, Char)]
 createTuples word = filter (\x -> snd x /= '_') $ [0..length word-1] `zip` word
 
+-- | Checks so that the function createTuples returns the correct tuple list
 prop_createTuples_correct :: String -> Bool
 prop_createTuples_correct string = length removeBlanks == length (createTuples string)
                 where removeBlanks = filter (`notElem` ['_']) string 
@@ -169,12 +170,12 @@ prop_createTuples_correct string = length removeBlanks == length (createTuples s
 -- | Check if the last word in the list is the word the player was thinking about, 
 -- otherwise it asks what you were thinking about
 gameOver :: [String] -> IO ()
-gameOver newWords@(x:xs) =
+gameOver (x:_) =
                 do 
                 putStrLn  ("Was the word you were thinking of: " ++ x ++ "?")
                 answer <- getLine 
                 if answer == "y" then 
                  putStrLn "Thanks for playing"
-                else putStrLn "What was the word you were thinking of?"
+                else putStrLn "Aww too bad, play again! :D"
                 
 
