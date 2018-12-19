@@ -43,7 +43,7 @@ play word setOfLetters filteredWords =
                   "n" -> play word newSet filteredWords
                   _ -> play word setOfLetters filteredWords
 
--- TODO: add word if not existing?????
+
 -- TODO: check the tests
 -- TODO: maybe make the end of game better
 -- Todo : NO :(
@@ -61,12 +61,14 @@ handleInput = do
 
 -- | Checks so that the input does not contain a position larger than the word
 notOutOfBounds :: [Int] -> String -> Bool
-notOutOfBounds guessInput word = all  ( <= wordLength) guessInput
+notOutOfBounds guessInput word = all  ( \x -> x <= wordLength && x /= 0) guessInput
                 where wordLength = length word
 
 -- | Not working for some reason
 prop_inBounds ::[Int] -> String -> Property
-prop_inBounds list word = not(null list) && not(null word) ==> notOutOfBounds list word
+prop_inBounds list word = not(null list) && not(null word) ==>  
+                notOutOfBounds list word ==  not (any (\x -> x > length word || x == 0) list)  
+
                 
                 
 -- | Reads the input from the user, if not an int it prompts for another input
@@ -110,23 +112,10 @@ getWords = do  text <- readFile "/usr/share/dict/words"
 
 -- | TODO Keep or don't keep               
 prop_getWords ::  IO Bool
-prop_getWords = do file <- readFile "/usr/share/dict/words"
+prop_getWords = do file <- readFile "Words.txt"
                    let words = lines file
                    otherWord <- getWords
                    return $ otherWord == words
-
--- -- | Not working, solve later
--- addNewWord = do theWord <- getLine
---                 wordList <- getWords
---                 let sortedWords = (unlines . sort) (wordList ++ [theWord])
---                 writeFile "Words.txt" sortedWords 
-
-
--- -- | Given a set of letters it returns a random letter from that set
--- getRandomLetter':: Set Char -> IO Char
--- getRandomLetter' set = do
---                      randomIndex <- randomRIO (0,size set-1)
---                      return $ elemAt randomIndex set
 
 -- | Generates a random letter with a higher frequency of a more common letter
 getRandomLetter :: Set Char -> IO Char
@@ -136,14 +125,12 @@ getRandomLetter set = generate $ frequency zipped
                       setToList = toList set
                       
 
--- TODO: Fix map toLower to better solution
 -- | Gives a set of letters that are in present in all the filtered words
 
 retrieveLetterSet :: [String] -> Set Char
 retrieveLetterSet =  fromList . map toLower . concat
 
-                      
--- TODO REDO THIS WITH NEW VABALBA
+
 
 -- | Checks so the resulting letter set all is present in the char list
 -- prop_retrieveLetterSet :: [String] -> [String] -> Bool
@@ -154,8 +141,6 @@ retrieveLetterSet =  fromList . map toLower . concat
 -- | Filters a set on a word using a help function check word to filter on the filled positions in the guess
 filterList :: String -> [String] -> [String]
 filterList word  = checkWord (createTuples word) 
-
--- Kolla på att refaktorera till två metoder ?! 
 
 -- | Given a tuple of positions and characters and a wordlist we filter the wordlist on the occurences of the positions and characters
 checkWord :: [(Int, Char)] -> [String] -> [String]
@@ -193,10 +178,3 @@ gameOver newWords@(x:xs) =
                 else putStrLn "What was the word you were thinking of?"
                 
 
--- | Checks that all the words after the filtering is filtered with the correct length
--- prop_filterList :: Int -> [String] -> Bool
--- prop_filterList wordLength = all checkLength . filter checkLength
---         where
---           checkLength x = length x == wordLength
--- TODO
---AritificalIntelligence :: AI -> AI
